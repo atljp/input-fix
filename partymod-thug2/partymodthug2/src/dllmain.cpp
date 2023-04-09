@@ -1,0 +1,87 @@
+#include <windows.h>
+
+#include <stdio.h>
+#include <stdint.h>
+
+#include <SDL.h>
+#include <SDL_syswm.h>
+
+#include <patch.h>
+#include <global.h>
+#include <input.h>
+#include <config.h>
+
+#define VERSION_NUMBER_MAJOR 0
+#define VERSION_NUMBER_MINOR 1
+
+char* executableDirectory[MAX_PATH];
+
+void initPatch() {
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
+
+	// find last slash
+	char* exe = strrchr((LPSTR)executableDirectory, '\\');
+	if (exe) {
+		*(exe + 1) = '\0';
+	}
+
+	char configFile[1024];
+	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
+
+	int isDebug = getIniBool("Miscellaneous", "Debug", 0, configFile);
+
+	if (isDebug) {
+		AllocConsole();
+
+		FILE* fDummy;
+		freopen_s(&fDummy, "CONIN$", "r", stdin);
+		freopen_s(&fDummy, "CONOUT$", "w", stderr);
+		freopen_s(&fDummy, "CONOUT$", "w", stdout);
+	}
+	printf("PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
+
+	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
+
+
+	printf("Patch Initialized\n");
+
+
+	//No Intro Movies
+	patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
+
+	//Blur Fix
+	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
+}
+
+
+__declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
+	// Perform actions based on the reason for calling.
+	switch (fdwReason) {
+	case DLL_PROCESS_ATTACH:
+		// Initialize once for each new process.
+		// Return FALSE to fail DLL load.
+
+		// install patches
+		initPatch();
+		patchWindow();
+		patchInput();
+
+		break;
+
+	case DLL_THREAD_ATTACH:
+		// Do thread-specific initialization.
+		break;
+
+	case DLL_THREAD_DETACH:
+		// Do thread-specific cleanup.
+		break;
+
+	case DLL_PROCESS_DETACH:
+		// Perform any necessary cleanup.
+		break;
+	}
+	return TRUE;
+}
+
+
+
