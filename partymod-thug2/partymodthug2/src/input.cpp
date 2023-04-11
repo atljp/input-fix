@@ -329,6 +329,7 @@ uint8_t getKey(SDL_Scancode key) {
 }
 
 void pollKeyboard(device* dev) {
+	
 	dev->isValid = 1;
 	dev->isPluggedIn = 1;
 
@@ -442,7 +443,7 @@ void pollKeyboard(device* dev) {
 	// left
 	// x
 	if (keyboardState[keybinds.left] && !keyboardState[keybinds.right]) {
-		printf("Left pressed\n");
+		//printf("Left pressed\n");
 		dev->controlData[6] = 0;
 	}
 	if (keyboardState[keybinds.right] && !keyboardState[keybinds.left]) {
@@ -485,13 +486,13 @@ void do_key_input(SDL_KeyCode key) {
 	key_input* m_keyinput = (key_input*)0x005BDE70;
 
 	uint8_t* keyboard_on_screen = (uint8_t*)0x007CE46E;
-	printf("Menu: %d\n", menu_on_screen());
+	//printf("Menu: %d\n", menu_on_screen());
 	if (!isKeyboardTyping()) {
 		printf("No keyboard on screen...\n");
 		return;
 	}
 	
-
+	printf("keyboard on screen\n");
 	int32_t key_out = 0;
 	uint8_t modstate = SDL_GetModState();
 	uint8_t shift = SDL_GetModState() & KMOD_SHIFT;
@@ -754,6 +755,22 @@ void processEvent(SDL_Event* e) {
 		*shouldQuit = 1;
 		exit(0);
 		return;
+	}
+	case SDL_WINDOWEVENT: {
+		//Checking windowed flag set by dx9 d3d present params
+		//Without this, game freezes while alt-tabbing
+		if (!(*(int*)0x00786A9C)) {
+			if (e->window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+				*(int*)ADDR_IsFocused = 1;
+				*(int*)ADDR_OtherIsFocused = 1;
+				return;
+			}
+			else if (e->window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+				*(int*)ADDR_IsFocused = 1;
+				*(int*)ADDR_OtherIsFocused = 1;
+				return;
+			}
+		}
 	}
 	default:
 		return;
