@@ -18,6 +18,7 @@ struct keybinds {
 	SDL_Scancode cameraSwivelLock;
 	SDL_Scancode focus;
 	SDL_Scancode caveman;
+	SDL_Scancode caveman2;
 
 	SDL_Scancode grind;
 	SDL_Scancode grab;
@@ -85,7 +86,7 @@ struct controllerbinds {
 	controllerButton cameraSwivelLock;
 	controllerButton focus;
 	controllerButton caveman;
-	// TODO: add spine button
+	controllerButton caveman2;
 
 	controllerButton grind;
 	controllerButton grab;
@@ -117,3 +118,5 @@ int getIniBool(const char* section, const char* key, int def, char* file);
 
 void dumpSettings();
 void patchWindow();
+void patch_ps2_font();
+void patch_button_lookup();

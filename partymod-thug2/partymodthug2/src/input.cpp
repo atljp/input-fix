@@ -24,7 +24,7 @@ void __cdecl set_actuators(int port, uint16_t left, uint16_t right);
 char* executableDirectory3[MAX_PATH];
 typedef struct {
 	uint32_t vtablePtr;
-		uint32_t node;
+	uint32_t node;
 	uint32_t type;
 	uint32_t port;
 	uint32_t slot;
@@ -234,6 +234,11 @@ void getStick(SDL_GameController* controller, controllerStick stick, uint8_t* xO
 }
 
 void pollController(device* dev, SDL_GameController* controller) {
+
+	//TODO: Add "if in menu: default menu binds". The button hints at the bottom of the menus don't change and are set to a default.
+	//If a player is in a menu, make it default to these binds. It's basically PC controls + Spinkeys on L2 and R2, Caveman1/2 on L1 and R2
+	//Same for keyboard with e+r in CAS, Enter and Backspace in Menus, correct ESC behavior, Keyboard Typing
+
 	if (SDL_GameControllerGetAttached(controller)) {
 		dev->isValid = 1;
 		dev->isPluggedIn = 1;
@@ -270,25 +275,61 @@ void pollController(device* dev, SDL_GameController* controller) {
 		}
 
 		// shoulders
-		if (getButton(controller, padbinds.leftSpin)) {
-			dev->controlData[3] |= 0x01 << 2;
-			dev->controlData[16] = 0xff;
+		if (inputsettings.isPs2Controls) //PS2 CONTROLS
+		{
+
+			if (getButton(controller, padbinds.leftSpin)) {
+				dev->controlData[3] |= 0x01 << 2;
+				dev->controlData[16] = 0xff;
+			}
+
+			if (getButton(controller, padbinds.rightSpin)) {
+				dev->controlData[3] |= 0x01 << 3;
+				dev->controlData[17] = 0xff;
+			}
+
+			if (getButton(controller, padbinds.nollie)) {
+				dev->controlData[3] |= 0x01 << 0;
+				dev->controlData[18] = 0xff;
+			}
+
+			if (getButton(controller, padbinds.switchRevert)) {
+				dev->controlData[3] |= 0x01 << 1;
+				dev->controlData[19] = 0xff;
+			}
+
+			//Two button caveman on spinkeys
+			if ((getButton(controller, padbinds.leftSpin)) && getButton(controller, padbinds.rightSpin)) {
+				dev->controlData[20] |= 0x01 << 0;
+			}
+
+		}
+		else //NO PS2 CONTROLS
+		{
+			if (getButton(controller, padbinds.leftSpin)) {
+				dev->controlData[3] |= 0x01 << 2;
+				dev->controlData[16] = 0xff;
+				dev->controlData[3] |= 0x01 << 0;
+				dev->controlData[18] = 0xff;
+			}
+
+			if (getButton(controller, padbinds.rightSpin)) {
+				dev->controlData[3] |= 0x01 << 3;
+				dev->controlData[17] = 0xff;
+				dev->controlData[3] |= 0x01 << 1;
+				dev->controlData[19] = 0xff;
+			}
+
+			if (getButton(controller, padbinds.caveman)) {
+				dev->controlData[20] |= 0x01 << 1;
+			}
+			if (getButton(controller, padbinds.caveman2)) {
+				printf("Caveman2\n");
+				dev->controlData[20] |= 0x01 << 0; //Just Caveman but also "Zoom Out" in Create-A-Goal
+
+			}
 		}
 
-		if (getButton(controller, padbinds.rightSpin)) {
-			dev->controlData[3] |= 0x01 << 3;
-			dev->controlData[17] = 0xff;
-		}
-
-		if (getButton(controller, padbinds.nollie)) {
-			dev->controlData[3] |= 0x01 << 0;
-			dev->controlData[18] = 0xff;
-		}
-
-		if (getButton(controller, padbinds.switchRevert)) {
-			dev->controlData[3] |= 0x01 << 1;
-			dev->controlData[19] = 0xff;
-		}
 
 		// d-pad
 		if (SDL_GameControllerGetButton(controller, (SDL_GameControllerButton)padbinds.up)) {
@@ -307,10 +348,11 @@ void pollController(device* dev, SDL_GameController* controller) {
 			dev->controlData[2] |= 0x01 << 7;
 			dev->controlData[9] = 0xFF;
 		}
-		
+
 		// sticks
 		getStick(controller, padbinds.camera, &(dev->controlData[4]), &(dev->controlData[5]));
 		getStick(controller, padbinds.movement, &(dev->controlData[6]), &(dev->controlData[7]));
+
 	}
 }
 
@@ -329,7 +371,7 @@ uint8_t getKey(SDL_Scancode key) {
 }
 
 void pollKeyboard(device* dev) {
-	
+
 	dev->isValid = 1;
 	dev->isPluggedIn = 1;
 
@@ -337,61 +379,58 @@ void pollKeyboard(device* dev) {
 
 	typedef void (open_quickchat)(); //params??
 	open_quickchat* m_openqc = (open_quickchat*)0x005F6610;
-	
 
-
-	// buttons
-	if (keyboardState[SDL_SCANCODE_RETURN]) {
-		m_openqc();
-	}
 
 	if (keyboardState[keybinds.menu]) { //ESC selects TODO
 		dev->controlData[2] |= 0x01 << 3;
 	}
-	if (keyboardState[keybinds.cameraToggle]) { //CORRECT
+	if (keyboardState[keybinds.cameraToggle]) {
 		dev->controlData[2] |= 0x01 << 0;
 	}
-	if (keyboardState[keybinds.focus]) { //CORRECT	// no control for left stick on keyboard
+	if (keyboardState[keybinds.focus]) { // no control for left stick on keyboard
 		dev->controlData[2] |= 0x01 << 1;
 
 		dev->controlData[2] |= 0x01 << 1;
 		dev->controlData[2] |= 0x01 << 4;
-
+		dev->controlData[2] |= 0x01 << 5;
+		dev->controlData[2] |= 0x01 << 6;
+		dev->controlData[2] |= 0x01 << 7;
+		dev->controlData[2] |= 0x01 << 4;
 		dev->controlData[1] |= 0x01 << 0;
 		dev->controlData[1] |= 0x01 << 1;
 		dev->controlData[1] |= 0x01 << 2;
 		dev->controlData[1] |= 0x01 << 3;
 	}
-	if (keyboardState[keybinds.cameraSwivelLock]) { //IDK
+	if (keyboardState[keybinds.cameraSwivelLock]) {
 		dev->controlData[2] |= 0x01 << 2;
 	}
 
-	if (keyboardState[keybinds.grind]) { //CORRECT
+	if (keyboardState[keybinds.grind]) {
 		dev->controlData[3] |= 0x01 << 4;
 		dev->controlData[12] = 0xff;
 	}
-	if (keyboardState[keybinds.grab]) { //CORRECT
+	if (keyboardState[keybinds.grab]) {
 		dev->controlData[3] |= 0x01 << 5;
 		dev->controlData[13] = 0xff;
 	}
-	if (keyboardState[keybinds.ollie]) {//CORRECT
+	if (keyboardState[keybinds.ollie]) {
 		dev->controlData[3] |= 0x01 << 6;
 		dev->controlData[14] = 0xff;
 	}
-	if (keyboardState[keybinds.kick]) { //CORRECT
+	if (keyboardState[keybinds.kick]) {
 		dev->controlData[3] |= 0x01 << 7;
 		dev->controlData[15] = 0xff;
 	}
 
 
-	//Switch/Revert +  Right Spin CORRECT
+	//Switch/Revert +  Right Spin
 	if (keyboardState[keybinds.rightSpin]) {
 		dev->controlData[3] |= 0x01 << 3;
 		dev->controlData[17] = 0xff;
 		dev->controlData[3] |= 0x01 << 1;
 		dev->controlData[19] = 0xff;
 	}
-	// Nollie + Left Spin CORRECT
+	// Nollie + Left Spin
 	if (keyboardState[keybinds.leftSpin]) {
 		dev->controlData[3] |= 0x01 << 2;
 		dev->controlData[16] = 0xff;
@@ -399,12 +438,12 @@ void pollKeyboard(device* dev) {
 		dev->controlData[18] = 0xff;
 	}
 
-	// caveman CORRECT
-	if (keyboardState[keybinds.caveman]) {
+	// Caveman
+	if (keyboardState[keybinds.caveman] | keyboardState[keybinds.caveman2]) {
 		dev->controlData[20] |= 0x01 << 0;
 	}
 
-	// create-a-park item control CORRECT
+	// create-a-park item control
 	if (keyboardState[keybinds.item_up]) {
 		dev->controlData[2] |= 0x01 << 4;
 		dev->controlData[10] = 0xFF;
@@ -443,7 +482,6 @@ void pollKeyboard(device* dev) {
 	// left
 	// x
 	if (keyboardState[keybinds.left] && !keyboardState[keybinds.right]) {
-		//printf("Left pressed\n");
 		dev->controlData[6] = 0;
 	}
 	if (keyboardState[keybinds.right] && !keyboardState[keybinds.left]) {
@@ -457,8 +495,6 @@ void pollKeyboard(device* dev) {
 	if (keyboardState[keybinds.down] && !keyboardState[keybinds.up]) {
 		dev->controlData[7] = 255;
 	}
-
-	
 }
 
 // returns 1 if a text entry prompt is on-screen so that keybinds don't interfere with text entry confirmation/cancellation
@@ -491,7 +527,7 @@ void do_key_input(SDL_KeyCode key) {
 		printf("No keyboard on screen...\n");
 		return;
 	}
-	
+
 	printf("keyboard on screen\n");
 	int32_t key_out = 0;
 	uint8_t modstate = SDL_GetModState();
@@ -937,12 +973,12 @@ void __stdcall initManager() {
 
 void patchPs2Buttons()
 {
-	
+
 	printf("Patching PS2 Buttons\n");
-	patchByte((void*)(0x0051F4C6 + 2), 0x05);	// change PC platform to gamecube.  this just makes it default to ps2 controls
+	//patchByte((void*)(0x0051F4C6 + 2), 0x05);	// change PC platform to gamecube.  this just makes it default to ps2 controls
 
 	// walk acid drop.
-	// only on R2 on ps2 but it will be patched to L2||R2 here
+	// Originally, only on R2 on PS2. It will be patched to L2 || R2 here
 	patchBytesM((void*)0x00527546, (BYTE*)"\x0F\x85\x0E\x00\x00\x00", 6);
 
 	//in_air_acid_drop
@@ -968,6 +1004,9 @@ void patchPs2Buttons()
 	//No Spinlag
 	patchNop((void*)ADDR_SpinLagL, 2);
 	patchNop((void*)ADDR_SpinLagR, 2);
+
+	//PS2 Buttons
+	patch_ps2_font();
 }
 
 void patchInput() {

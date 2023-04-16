@@ -83,8 +83,8 @@ void patchResolution()
 {
 	patchDWord((void*)ADDR_ResolutionX, resX);				//Ingame X
 	patchDWord((void*)ADDR_ResolutionY, resY);				//Ingame Y
-	patchNop((void*)ADDR_ResFromReg_A, 5);											//Disable launcher setting X
-	patchNop((void*)ADDR_ResFromReg_B, 6);											//Disable launcher setting Y
+	patchNop((void*)ADDR_ResFromReg_A, 5);					//Disable launcher setting X
+	patchNop((void*)ADDR_ResFromReg_B, 6);					//Disable launcher setting Y
 
 	patchCall((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
 	patchByte((void*)ADDR_FUNC_AspectRatio, 0xE9);
@@ -138,16 +138,22 @@ void createSDLWindow()
 
 	//DirectX9: D3DPRESENTPARAMS
 	if (isWindowed)
+	{
 		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); //Windowed = 1
+		SDL_ShowCursor(1);
+	}
+	else
+	{
+		SDL_ShowCursor(0);
+	}
 
+		
 	// patch resolution of the window
 	patchDWord((void*)ADDR_WindowResoltionX, resX);
 	patchDWord((void*)ADDR_WindowResoltionY, resY);
 
 	//patch resolution of the game
-	patchResolution();
-
-	SDL_ShowCursor(1);
+	patchResolution();		
 }
 
 
@@ -266,34 +272,34 @@ void loadKeyBinds(struct keybinds* bindsOut)
 
 	if (bindsOut) {
 		bindsOut->menu = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Pause", SDL_SCANCODE_RETURN, configFile);
-		bindsOut->cameraToggle = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ViewToggle", SDL_SCANCODE_F, configFile);
+		bindsOut->cameraToggle = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ViewToggle", SDL_SCANCODE_TAB, configFile);
 		bindsOut->cameraSwivelLock = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "SwivelLock", SDL_SCANCODE_GRAVE, configFile);
-		bindsOut->focus = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Focus", SDL_SCANCODE_KP_ENTER, configFile);
-		bindsOut->caveman = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Caveman", SDL_SCANCODE_G, configFile);
+		bindsOut->focus = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Focus", SDL_SCANCODE_KP_0, configFile);
+		bindsOut->caveman = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Caveman", SDL_SCANCODE_KP_1, configFile);
+		bindsOut->caveman2 = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Caveman2", SDL_SCANCODE_KP_3, configFile);
 
 		bindsOut->grind = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Grind", SDL_SCANCODE_KP_8, configFile);
 		bindsOut->grab = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Grab", SDL_SCANCODE_KP_6, configFile);
 		bindsOut->ollie = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Ollie", SDL_SCANCODE_KP_2, configFile);
 		bindsOut->kick = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Flip", SDL_SCANCODE_KP_4, configFile);
 
-		bindsOut->leftSpin = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "SpinLeft", SDL_SCANCODE_KP_1, configFile);
-		bindsOut->rightSpin = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "SpinRight", SDL_SCANCODE_KP_3, configFile);
-		bindsOut->nollie = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Nollie", SDL_SCANCODE_KP_7, configFile);
+		bindsOut->leftSpin = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "SpinLeft", SDL_SCANCODE_KP_7, configFile);
+		bindsOut->rightSpin = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "SpinRight", SDL_SCANCODE_KP_9, configFile);
 
 		bindsOut->right = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Right", SDL_SCANCODE_D, configFile);
 		bindsOut->left = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Left", SDL_SCANCODE_A, configFile);
 		bindsOut->up = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Forward", SDL_SCANCODE_W, configFile);
 		bindsOut->down = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Backward", SDL_SCANCODE_S, configFile);
 
-		bindsOut->cameraRight = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraRight", SDL_SCANCODE_L, configFile);
-		bindsOut->cameraLeft = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraLeft", SDL_SCANCODE_J, configFile);
-		bindsOut->cameraUp = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraUp", SDL_SCANCODE_I, configFile);
-		bindsOut->cameraDown = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraDown", SDL_SCANCODE_K, configFile);
+		bindsOut->cameraRight = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraRight", SDL_SCANCODE_V, configFile);
+		bindsOut->cameraLeft = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraLeft", SDL_SCANCODE_C, configFile);
+		bindsOut->cameraUp = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraUp", SDL_SCANCODE_Z, configFile);
+		bindsOut->cameraDown = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "CameraDown", SDL_SCANCODE_X, configFile);
 
-		bindsOut->item_up = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemUp", SDL_SCANCODE_UP, configFile);
-		bindsOut->item_down = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemDown", SDL_SCANCODE_DOWN, configFile);
-		bindsOut->item_left = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemLeft", SDL_SCANCODE_LEFT, configFile);
-		bindsOut->item_right = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemRight", SDL_SCANCODE_RIGHT, configFile);
+		bindsOut->item_up = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemUp", SDL_SCANCODE_HOME, configFile);
+		bindsOut->item_down = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemDown", SDL_SCANCODE_END, configFile);
+		bindsOut->item_left = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemLeft", SDL_SCANCODE_DELETE, configFile);
+		bindsOut->item_right = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ItemRight", SDL_SCANCODE_PAGEDOWN, configFile);
 	}
 }
 
@@ -319,7 +325,8 @@ void loadControllerBinds(struct controllerbinds* bindsOut)
 		bindsOut->cameraToggle = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "ViewToggle", CONTROLLER_BUTTON_BACK, configFile);
 		bindsOut->cameraSwivelLock = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "SwivelLock", CONTROLLER_BUTTON_RIGHTSTICK, configFile);
 		bindsOut->focus = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Focus", CONTROLLER_BUTTON_LEFTSTICK, configFile);
-		bindsOut->caveman = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Caveman", 0, configFile);
+		bindsOut->caveman = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Caveman", CONTROLLER_BUTTON_RIGHTTRIGGER, configFile);
+		bindsOut->caveman2 = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Caveman2", CONTROLLER_BUTTON_LEFTTRIGGER, configFile);
 
 		bindsOut->grind = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Grind", CONTROLLER_BUTTON_Y, configFile);
 		bindsOut->grab = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Grab", CONTROLLER_BUTTON_B, configFile);
@@ -338,5 +345,112 @@ void loadControllerBinds(struct controllerbinds* bindsOut)
 
 		bindsOut->movement = (controllerStick)GetPrivateProfileInt(CONTROLLER_SECTION, "MovementStick", CONTROLLER_STICK_LEFT, configFile);
 		bindsOut->camera = (controllerStick)GetPrivateProfileInt(CONTROLLER_SECTION, "CameraStick", CONTROLLER_STICK_RIGHT, configFile);
+	}
+}
+
+void patch_ps2_font()
+{
+
+	patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
+	patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
+	patchBytesM((void*)0x00648B03, (BYTE*)"\x50\x73\x32\x00\x00", 5); //ButtonsPs2
+	patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40); //Font lookup
+	patchCall((void*)0x004CFF0C, &patch_button_lookup);
+}
+
+void __declspec(naked) patch_button_lookup()
+{
+	__asm {
+		push ebp
+		mov ebp, esp
+		mov ecx, dword ptr ss : [ebp + 0x8]
+		push ebx
+
+		mov cl, byte ptr ds : [ecx]
+		movsx eax, cl
+		add eax, 0xFFFFFFB3
+		cmp eax, 0x27
+		ja label_end
+
+		movzx eax, byte ptr ds : [eax + 0x005E2155]
+		cmp eax, 0x0
+		jne label_next_1
+		mov al, 0x33
+		jmp label_continue
+		label_next_1 :
+		cmp eax, 0x1
+			jne label_next_2
+			mov al, 0x32
+			jmp label_continue
+			label_next_2 :
+		cmp eax, 0x2
+			jne label_next_3
+			mov al, 0x31
+			jmp label_continue
+			label_next_3 :
+		cmp eax, 0x3
+			jne label_next_4
+			mov al, 0x30
+			jmp label_continue
+			label_next_4 :
+		cmp eax, 0x4
+			jne label_next_5
+			xor al, al
+			label_a :
+		lea eax, dword ptr ds : [eax * 2 + 0x65]
+			jmp label_continue
+			label_next_5 :
+		cmp eax, 0x5
+			jne label_next_6
+			xor al, al
+			label_b :
+		lea eax, dword ptr ds : [eax * 2 + 0x66]
+			jmp label_continue
+			label_next_6 :
+		cmp eax, 0x6
+			jne label_next_7
+			mov al, 0x1
+			jmp label_a
+			label_next_7 :
+		cmp eax, 0x7
+			jne label_next_8
+			mov al, 0x1
+			jmp label_b
+			label_next_8 :
+		mov al, cl
+			jmp label_continue
+
+			label_continue :
+		mov bl, al
+			xor edx, edx
+			lea ecx, dword ptr ds : [ebx - 0x30]
+			cmp cl, 0x9
+			ja label_h_1
+			movsx edx, bl
+			sub edx, 0x30
+			jmp label_h_3
+			label_h_1 :
+		mov al, bl
+			sub al, 0x61
+			cmp al, 0x15
+			ja label_h_2
+			movsx edx, bl
+			sub edx, 0x57
+			jmp label_h_3
+			label_h_2 :
+		mov al, bl
+			sub al, 0x41
+			cmp al, 0x15
+			ja label_h_3
+			movsx edx, bl
+			sub edx, 0x37
+			label_h_3:
+		mov eax, edx
+			pop ebx
+			pop ebp
+			ret
+			label_end :
+		mov al, cl
+			jmp label_continue
 	}
 }

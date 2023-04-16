@@ -29,6 +29,7 @@ void initPatch() {
 	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
 	int isDebug = getIniBool("Miscellaneous", "Debug", 0, configFile);
+	int language = GetPrivateProfileInt("Miscellaneous", "Language", 1, configFile);
 
 	if (isDebug) {
 		AllocConsole();
@@ -48,9 +49,24 @@ void initPatch() {
 
 	//No Intro Movies
 	patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
-
 	//Blur Fix
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
+
+
+	//Language
+	patchNop((void*)ADDR_FUNC_LangFromReg, 5);		//Don't get the value from registry
+
+	if (language == 1)
+		patchByte((void*)ADDR_LanguageFlag, 1);		//English
+	else if (language == 2)
+		patchByte((void*)ADDR_LanguageFlag, 3);		//French
+	else if (language == 3)
+		patchByte((void*)ADDR_LanguageFlag, 5);		//German
+	else
+		patchByte((void*)ADDR_LanguageFlag, 1);
+
+	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Both bytes needed to load savegames accross multiple language settings
+	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
 }
 
 
@@ -65,7 +81,6 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 		initPatch();
 		patchWindow();
 		patchInput();
-
 		break;
 
 	case DLL_THREAD_ATTACH:
