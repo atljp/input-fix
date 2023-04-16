@@ -2,9 +2,9 @@
 
 ## Known issues:
 
-- Pressing controler buttons disables movement keys on keyboard
-- Enter key (SDLSCANCODE_RETURN) does not select in menus
-- ESC key doesn't always go back in menus and sometimes select instead
+- Pressing controller buttons disables movement keys on keyboard
+- 2 Player option always available, second skater cannot be selected
+- Separate menu controls needed
 - No flip / grab button fonts in Edit Tricks menu (only arrows)
 - Main menu text and load screen background not adjusted for widescreen aspect ratio
 
