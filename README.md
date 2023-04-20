@@ -3,10 +3,11 @@
 ## Known issues:
 
 - Pressing controller buttons disables movement keys on keyboard
-- 2 Player option always available, second skater cannot be selected
 - Separate menu controls needed
-- No flip / grab button fonts in Edit Tricks menu (only arrows)
+- No flip / grab buttons listed in Edit Tricks menu (for PC controls)
 - Main menu text and load screen background not adjusted for widescreen aspect ratio
+- No keybinds for online quick chat and taunts
+- Resolutions above 1920x1080 crash
 
 ## Visual Studio Project
 

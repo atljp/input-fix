@@ -36,12 +36,12 @@ typedef struct {
 	uint8_t vibrationData_max[32];
 	uint8_t vibrationData_oldDirect[32];    // there may be something before this
 	uint32_t unk5;
-	uint32_t unk6;
+	//uint32_t unk6;
 	uint32_t actuatorsDisabled;
 	uint32_t capabilities;
 	uint32_t unk7;
 	uint32_t num_actuators;
-	//uint32_t unk8;
+	uint32_t unk8;
 	uint32_t state;
 	uint32_t test;
 	uint32_t index;
@@ -509,9 +509,9 @@ uint8_t isKeyboardTyping()
 uint8_t menu_on_screen()
 {
 	uint8_t* menu_on_screen = (uint8_t*)0x007CE46F; //Every menu
-	uint8_t* not_main_menu = (uint8_t*)0x0069BAA8; //Only in level ESC menu (69BAA) (6EE004)
+	uint8_t* other_menu_on_screen = (uint8_t*)0x0069BAA8; //Only in level ESC menu (69BAA) (6EE004)
 
-	return *menu_on_screen;
+	return (*menu_on_screen | *other_menu_on_screen);
 
 }
 
@@ -524,11 +524,9 @@ void do_key_input(SDL_KeyCode key) {
 	uint8_t* keyboard_on_screen = (uint8_t*)0x007CE46E;
 	//printf("Menu: %d\n", menu_on_screen());
 	if (!isKeyboardTyping()) {
-		printf("No keyboard on screen...\n");
 		return;
 	}
 
-	printf("keyboard on screen\n");
 	int32_t key_out = 0;
 	uint8_t modstate = SDL_GetModState();
 	uint8_t shift = SDL_GetModState() & KMOD_SHIFT;
@@ -754,12 +752,12 @@ void processEvent(SDL_Event* e) {
 		printf("Joystick added: %s\n", SDL_JoystickNameForIndex(e->jdevice.which));
 		return;
 	case SDL_KEYDOWN:
-		printf("KEY: %s\n", SDL_GetKeyName(e->key.keysym.sym));
+		//printf("KEY: %s\n", SDL_GetKeyName(e->key.keysym.sym));
 		setUsingKeyboard(1);
 		do_key_input((SDL_KeyCode)e->key.keysym.sym);
 		return;
 	case SDL_CONTROLLERBUTTONDOWN: {
-		printf("BUTTON: %s\n", SDL_GetKeyName(e->key.keysym.sym));
+		//printf("BUTTON: %s\n", SDL_GetKeyName(e->key.keysym.sym));
 		SDL_GameController* controller = SDL_GameControllerFromInstanceID(e->cdevice.which);
 
 		int idx = SDL_GameControllerGetPlayerIndex(controller);
@@ -789,7 +787,6 @@ void processEvent(SDL_Event* e) {
 	case SDL_QUIT: {
 		int* shouldQuit = (int*)0x007D6A2C;
 		*shouldQuit = 1;
-		exit(0);
 		return;
 	}
 	case SDL_WINDOWEVENT: {
@@ -826,7 +823,7 @@ void __cdecl processController(device* dev) {
 	dev->vibrationData_max[0] = 255;
 	dev->vibrationData_max[1] = 255;
 	dev->state = 2;
-	//dev->actuatorsDisabled = 0;
+	dev->actuatorsDisabled = 0;
 
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
@@ -834,8 +831,8 @@ void __cdecl processController(device* dev) {
 		//printf("EVENT!!!\n");
 	}
 
-	dev->isValid = 1;
-	dev->isPluggedIn = 1;
+	dev->isValid = 0;
+	dev->isPluggedIn = 0;
 
 	dev->controlData[0] = 0;
 	dev->controlData[1] = 0x70;
@@ -917,7 +914,7 @@ void __cdecl processController(device* dev) {
 }
 
 void __cdecl set_actuators(int port, uint16_t left, uint16_t right) {
-	printf("SETTING ACTUATORS: %d %d %d\n", port, left, right);
+	//printf("SETTING ACTUATORS: %d %d %d\n", port, left, right);
 	for (int i = 0; i < controllerCount; i++) {
 		if (SDL_GameControllerGetAttached(controllerList[i]) && SDL_GameControllerGetPlayerIndex(controllerList[i]) == port) {
 			SDL_JoystickRumble(SDL_GameControllerGetJoystick(controllerList[i]), left, right, 1000);
@@ -975,10 +972,10 @@ void patchPs2Buttons()
 {
 
 	printf("Patching PS2 Buttons\n");
-	//patchByte((void*)(0x0051F4C6 + 2), 0x05);	// change PC platform to gamecube.  this just makes it default to ps2 controls
+	patchByte((void*)(0x0051F4C6 + 2), 0x05);	// change PC platform to gamecube.  this just makes it default to ps2 controls. needed for rail DD on R2
 
 	// walk acid drop.
-	// Originally, only on R2 on PS2. It will be patched to L2 || R2 here
+	// Originally, only on R2 on PS2. It will be patched to L2 | R2 here
 	patchBytesM((void*)0x00527546, (BYTE*)"\x0F\x85\x0E\x00\x00\x00", 6);
 
 	//in_air_acid_drop

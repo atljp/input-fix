@@ -43,7 +43,6 @@ void initPatch() {
 
 	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
 
-
 	printf("Patch Initialized\n");
 
 

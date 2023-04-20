@@ -89,7 +89,7 @@ void patchResolution()
 	patchCall((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
 	patchByte((void*)ADDR_FUNC_AspectRatio, 0xE9);
 
-	patchCall((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor);
+	patchCall((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
 	patchByte((void*)ADDR_FUNC_ScreenAngleFactor, 0xE9);
 }
 
