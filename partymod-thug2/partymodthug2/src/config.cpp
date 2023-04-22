@@ -163,7 +163,13 @@ void writeConfigValues()
 	uint32_t distance = graphics_settings.clipping_distance;
 
 	*antialiasing = graphics_settings.antialiasing;
-	*hq_shadows = graphics_settings.hq_shadows;
+	if (graphics_settings.hq_shadows)
+	{
+		printf("Setting HQ Shadows\n");
+		*hq_shadows = graphics_settings.hq_shadows;
+		patchByte((void*)(0x004A19E5 + 2), 0x04); //Very high shadow quality
+		patchByte((void*)(0x004A19EA + 2), 0x04);
+	}
 	*distance_clipping = graphics_settings.distance_clipping;
 	*fog = graphics_settings.fog;
 
@@ -180,6 +186,11 @@ void writeConfigValues()
 	else
 		*clipping_distance_2 = distance_real;
 
+	//Patch further instructions for slight graphical improvements
+	patchNop((void*)0x0044F045, 8);
+	patchNop((void*)0x0048C330, 5);
+	patchNop((void*)0x004B2DC4, 5);
+	patchNop((void*)0x004B3405, 5);
 }
 
 

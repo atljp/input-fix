@@ -16,6 +16,29 @@
 
 char* executableDirectory[MAX_PATH];
 
+void __declspec(naked) fix_bg_plane()
+{
+	static uint32_t ret_addr = 0x004AD247;
+	static uint32_t addr_func = 0x477B80;
+	__asm {
+
+		cmp dword ptr ss : [esp+0x18] , 0xBC4B9584
+		je label_jump_to_ret_addr
+		mov ebx, eax
+		mov eax, 0xFFFFFEE7
+		push eax
+		push 0xED7C6031
+		call addr_func
+		mov eax, ebx
+	label_jump_to_ret_addr :
+		push 0xFFFFFFFF
+		push 0x63A298
+		jmp ret_addr
+
+	}
+}
+
+
 void initPatch() {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
@@ -66,6 +89,9 @@ void initPatch() {
 
 	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Both bytes needed to load savegames accross multiple language settings
 	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
+
+
+	patchJump((void*)0x004AD240, &fix_bg_plane);
 }
 
 
