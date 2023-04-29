@@ -6,6 +6,7 @@
 
 char* executableDirectory2[MAX_PATH];
 
+
 uint8_t isWindowed = 0;
 //uint32_t* resolution_setting = 0x008b455c;
 uint8_t* antialiasing = (uint8_t*)(0x007D6434);
@@ -28,7 +29,6 @@ typedef struct {
 	uint32_t fog;
 } graphicsSettings;
 
-
 int resX;
 int resY;
 float aspect_ratio;
@@ -36,6 +36,33 @@ graphicsSettings graphics_settings;
 SDL_Window* window;
 
 void loadSettings();
+
+void __declspec(naked) fix_bg_plane()
+{
+	static uint32_t ret_addr = 0x004AD247;
+	static uint32_t unk_477B80 = 0x477B80;
+
+	if (!(*(uint8_t*)0x0069BAA8)) //Check for level select menu. Still breaks some menus, like "Enter Name" in classic or CAP
+	{
+		__asm {
+			mov eax, 0xFFFFFEE7
+			push eax
+			push 0xED7C6031
+			call unk_477B80
+			push 0xFFFFFFFF
+			push 0x63A298
+			jmp ret_addr
+		}
+	}
+	else
+	{
+		__asm {
+			push 0xFFFFFFFF
+			push 0x63A298
+			jmp ret_addr
+		}
+	}
+}
 
 
 
@@ -89,8 +116,16 @@ void patchResolution()
 	patchCall((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
 	patchByte((void*)ADDR_FUNC_AspectRatio, 0xE9);
 
+
 	patchCall((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
 	patchByte((void*)ADDR_FUNC_ScreenAngleFactor, 0xE9);
+
+	//Fix mainmenu - assembly version
+	if (((float)resX / (float)resY > 1.34f)) {
+		patchJump((void*)0x004AD240, &fix_bg_plane); //Extra code before ScriptCreateScreenElement
+		//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
+	}
+
 }
 
 
@@ -113,11 +148,11 @@ void createSDLWindow()
 		resY = displayMode.h;
 	}
 
-	if (resX < 1024) {
-		resX = 1024;
+	if (resX < 640) {
+		resX = 640;
 	}
-	if (resY < 768) {
-		resY = 768;
+	if (resY < 480) {
+		resY = 480;
 	}
 
 	window = SDL_CreateWindow("THUG2 - PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
@@ -186,6 +221,7 @@ void writeConfigValues()
 	else
 		*clipping_distance_2 = distance_real;
 
+	
 	//Patch further instructions for slight graphical improvements
 	patchNop((void*)0x0044F045, 8);
 	patchNop((void*)0x0048C330, 5);
@@ -232,16 +268,14 @@ void loadSettings()
 	char configFile[MAX_PATH];
 	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
 
-	printf("AAAA %s\n", (LPSTR)configFile);
-
 	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
 	graphics_settings.hq_shadows = getIniBool("Graphics", "HQShadows", 0, configFile);
 	graphics_settings.distance_clipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
 	graphics_settings.clipping_distance = GetPrivateProfileInt("Graphics", "ClippingDistance", 100, configFile);
 	graphics_settings.fog = getIniBool("Graphics", "Fog", 0, configFile);
 
-	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 1024, configFile);
-	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 768, configFile);
+	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 640, configFile);
+	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
 	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
 	borderless = getIniBool("Graphics", "Borderless", 0, configFile);
 }
@@ -317,8 +351,6 @@ void loadKeyBinds(struct keybinds* bindsOut)
 
 void loadControllerBinds(struct controllerbinds* bindsOut)
 {
-	
-
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
 
 	// find last slash

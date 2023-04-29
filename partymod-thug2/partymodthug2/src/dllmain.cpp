@@ -10,32 +10,30 @@
 #include <global.h>
 #include <input.h>
 #include <config.h>
+#include <time.h>
 
 #define VERSION_NUMBER_MAJOR 0
 #define VERSION_NUMBER_MINOR 1
 
 char* executableDirectory[MAX_PATH];
 
-void __declspec(naked) fix_bg_plane()
+struct DummyScript
 {
-	static uint32_t ret_addr = 0x004AD247;
-	static uint32_t addr_func = 0x477B80;
-	__asm {
+	char unk[200];
+	uint32_t script_name;
+};
 
-		cmp dword ptr ss : [esp+0x18] , 0xBC4B9584
-		je label_jump_to_ret_addr
-		mov ebx, eax
-		mov eax, 0xFFFFFEE7
-		push eax
-		push 0xED7C6031
-		call addr_func
-		mov eax, ebx
-	label_jump_to_ret_addr :
-		push 0xFFFFFFFF
-		push 0x63A298
-		jmp ret_addr
 
-	}
+int Rnd_fixed(int n)
+{
+	return (rand() % n);
+}
+
+bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
+{
+	if (pScript->script_name == 0x6AEC78DA)
+		return true;
+	return false;
 }
 
 
@@ -73,7 +71,9 @@ void initPatch() {
 	patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
 	//Blur Fix
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
-
+	//Air drift
+	if (getIniBool("Miscellaneous", "THUGAirDrift", 0, configFile))
+		patchNop((void*)ADDR_AirDrift, 8);
 
 	//Language
 	patchNop((void*)ADDR_FUNC_LangFromReg, 5);		//Don't get the value from registry
@@ -90,8 +90,14 @@ void initPatch() {
 	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Both bytes needed to load savegames accross multiple language settings
 	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
 
+	//Patch CFuncs here
+	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched);
 
-	patchJump((void*)0x004AD240, &fix_bg_plane);
+	//Patch fixed RNG
+	srand(static_cast<unsigned int>(time(0)));
+	patchCall((void*)0x004523A7, &Rnd_fixed);
+	patchCall((void*)0x004523B4, &Rnd_fixed);
+	patchCall((void*)0x004523F6, &Rnd_fixed);
 }
 
 
