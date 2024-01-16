@@ -73,7 +73,11 @@ void initPatch() {
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
 	//Air drift
 	if (getIniBool("Miscellaneous", "THUGAirDrift", 0, configFile))
+	{
+		patchNop((void*)0x00526A36, 8); //Lock camera fix
 		patchNop((void*)ADDR_AirDrift, 8);
+	}
+		
 
 	//Language
 	patchNop((void*)ADDR_FUNC_LangFromReg, 5);		//Don't get the value from registry
