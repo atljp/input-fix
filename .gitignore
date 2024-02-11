@@ -9,6 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+partymod-thug2/SDL2-2.28.3
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

@@ -118,5 +118,5 @@ int getIniBool(const char* section, const char* key, int def, char* file);
 
 void dumpSettings();
 void patchWindow();
-void patch_ps2_font();
+void patch_button_font(uint8_t sel);
 void patch_button_lookup();

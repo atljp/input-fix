@@ -18,7 +18,7 @@ uint8_t isKeyboardTyping();
 uint8_t menu_on_screen();
 
 
-void __cdecl set_actuators(int port, uint16_t left, uint16_t right);
+void __cdecl set_actuators(int port, uint16_t hight, uint16_t low);
 
 
 char* executableDirectory3[MAX_PATH];
@@ -219,17 +219,27 @@ uint8_t getButton(SDL_GameController* controller, controllerButton button) {
 }
 
 void getStick(SDL_GameController* controller, controllerStick stick, uint8_t* xOut, uint8_t* yOut) {
+	uint8_t result_x, result_y;
+
 	if (stick == CONTROLLER_STICK_LEFT) {
-		*xOut = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) >> 8) + 128);
-		*yOut = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY) >> 8) + 128);
+		result_x = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX) >> 8) + 128);
+		result_y = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY) >> 8) + 128);
 	}
 	else if (stick == CONTROLLER_STICK_RIGHT) {
-		*xOut = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTX) >> 8) + 128);
-		*yOut = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY) >> 8) + 128);
+		result_x = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTX) >> 8) + 128);
+		result_y = (uint8_t)((SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY) >> 8) + 128);
 	}
 	else {
-		*xOut = 0x80;
-		*yOut = 0x80;
+		result_x = 0x80;
+		result_y = 0x80;
+	}
+
+	if (axisAbs(result_x) > axisAbs(*xOut)) {
+		*xOut = result_x;
+	}
+
+	if (axisAbs(result_y) > axisAbs(*yOut)) {
+		*yOut = result_y;
 	}
 }
 
@@ -377,9 +387,6 @@ void pollKeyboard(device* dev) {
 
 	uint8_t* keyboardState = (uint8_t*)SDL_GetKeyboardState(NULL);
 
-	typedef void (open_quickchat)(); //params??
-	open_quickchat* m_openqc = (open_quickchat*)0x005F6610;
-
 
 	if (keyboardState[keybinds.menu]) { //ESC selects TODO
 		dev->controlData[2] |= 0x01 << 3;
@@ -389,17 +396,6 @@ void pollKeyboard(device* dev) {
 	}
 	if (keyboardState[keybinds.focus]) { // no control for left stick on keyboard
 		dev->controlData[2] |= 0x01 << 1;
-
-		dev->controlData[2] |= 0x01 << 1;
-		dev->controlData[2] |= 0x01 << 4;
-		dev->controlData[2] |= 0x01 << 5;
-		dev->controlData[2] |= 0x01 << 6;
-		dev->controlData[2] |= 0x01 << 7;
-		dev->controlData[2] |= 0x01 << 4;
-		dev->controlData[1] |= 0x01 << 0;
-		dev->controlData[1] |= 0x01 << 1;
-		dev->controlData[1] |= 0x01 << 2;
-		dev->controlData[1] |= 0x01 << 3;
 	}
 	if (keyboardState[keybinds.cameraSwivelLock]) {
 		dev->controlData[2] |= 0x01 << 2;
@@ -913,11 +909,11 @@ void __cdecl processController(device* dev) {
 	//printf("UNKNOWN VALUES: 0x0074fb42: %d, 0x00751dc0: %d, 0x0074fb43: %d\n", *unk1, *unk2, *unk3);
 }
 
-void __cdecl set_actuators(int port, uint16_t left, uint16_t right) {
+void __cdecl set_actuators(int port, uint16_t high, uint16_t low) {
 	//printf("SETTING ACTUATORS: %d %d %d\n", port, left, right);
 	for (int i = 0; i < controllerCount; i++) {
 		if (SDL_GameControllerGetAttached(controllerList[i]) && SDL_GameControllerGetPlayerIndex(controllerList[i]) == port) {
-			SDL_JoystickRumble(SDL_GameControllerGetJoystick(controllerList[i]), left, right, 1000);
+			SDL_JoystickRumble(SDL_GameControllerGetJoystick(controllerList[i]), low, high, 0);
 		}
 	}
 }
@@ -1003,7 +999,7 @@ void patchPs2Buttons()
 	patchNop((void*)ADDR_SpinLagR, 2);
 
 	//PS2 Buttons
-	patch_ps2_font();
+	//patch_button_font();
 }
 
 void patchInput() {

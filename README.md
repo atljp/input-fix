@@ -2,7 +2,6 @@
 
 ## Known issues:
 
-- Pressing controller buttons disables movement keys on keyboard
 - Separate menu controls needed
 - No flip / grab buttons listed in Edit Tricks menu (for PC controls)
 - Main menu text not adjusted for widescreen aspect ratio
@@ -14,3 +13,4 @@
 - Built with Visual Studio 2022
 - Toolset v143
 - Build configuration: Release, x86 (win32)
+- Extract the SDL zip to: \input-fix\partymod-thug2\SDL2-2.28.3 

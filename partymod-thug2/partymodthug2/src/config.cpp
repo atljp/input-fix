@@ -155,7 +155,7 @@ void createSDLWindow()
 		resY = 480;
 	}
 
-	window = SDL_CreateWindow("THUG2 - PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
+	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
 
 	if (!window)
 		printf("Failed to create window! Error: %s\n", SDL_GetError());
@@ -391,15 +391,34 @@ void loadControllerBinds(struct controllerbinds* bindsOut)
 	}
 }
 
-void patch_ps2_font()
+void patch_button_font(uint8_t sel)
 {
+	switch (sel)
+	{
+	case 1:
+		patchBytesM((void*)0x00648B03, (BYTE*)"\x50\x73\x32\x00\x00", 5); //ButtonsPs2
+		break;
+	case 2:
+		patchBytesM((void*)0x00648B03, (BYTE*)"\x58\x62\x6F\x78\x00", 5); //ButtonsXBox
+		break;
+	case 3:
+		patchBytesM((void*)0x00648B03, (BYTE*)"\x4E\x67\x63\x00\x00", 5); //ButtonsNgc
+	default:
+		break;
 
-	patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
-	patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
-	patchBytesM((void*)0x00648B03, (BYTE*)"\x50\x73\x32\x00\x00", 5); //ButtonsPs2
-	patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40); //Font lookup
-	patchCall((void*)0x004CFF0C, &patch_button_lookup);
+	}
+
+	if (0 < sel && sel < 4)
+	{
+		patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
+		patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
+		patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40); //Font lookup
+		patchCall((void*)0x004CFF0C, &patch_button_lookup);
+	}
+	//For any other value default PC buttons are displayed
 }
+
+
 
 void __declspec(naked) patch_button_lookup()
 {
