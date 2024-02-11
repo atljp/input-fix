@@ -41,5 +41,8 @@
     <ClInclude Include="src\input.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\keycodes.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

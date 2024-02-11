@@ -9,6 +9,8 @@
 #include <patch.h>
 #include <config.h>
 
+#include "keycodes.h"
+
 
 #define MAX_PLAYERS 2
 
@@ -918,6 +920,19 @@ void __cdecl set_actuators(int port, uint16_t high, uint16_t low) {
 	}
 }
 
+uint8_t convert_SDL_to_OIS_keycode(uint8_t sdlKeyCode) {
+	// Lookup the SDL keycode in the map
+	auto it = SDL_to_OIS_map.find(sdlKeyCode);
+	if (it != SDL_to_OIS_map.end()) {
+		// Return the corresponding OIS keycode
+		return it->second;
+	}
+	else {
+		// If no mapping found, return an unspecified keycode
+		return OIS_KC_UNASSIGNED;
+	}
+}
+
 void __stdcall initManager() {
 	printf("Initializing Manager!\n");
 
@@ -962,6 +977,13 @@ void __stdcall initManager() {
 	}
 	else
 		printf("PS2 Controls disabled\n");
+
+	// Add missing key info: Since we don't use the launcher, no registry values for our keybinds are set.
+	// The game normally loads keybinds found in the registry and stores them at these addresses (starting at 0x007D6794).
+	// This allows to display keybinds set in the launcher in game (e.g., Edit Tricks menu or Freak Out Meter "Press PK_8 to freak out").
+	patchKeycode((void*)0x007D6794, convert_SDL_to_OIS_keycode(keybinds.grab)); //Grab
+	patchKeycode((void*)0x007D6798, convert_SDL_to_OIS_keycode(keybinds.kick)); //Flip
+	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind)); //Grind k0_11 4 --> 0x007D679C 05 00 00 00
 }
 
 void patchPs2Buttons()

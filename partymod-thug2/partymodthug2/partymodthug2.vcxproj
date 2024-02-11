@@ -28,6 +28,7 @@
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\global.h" />
     <ClInclude Include="src\input.h" />
+    <ClInclude Include="src\keycodes.h" />
     <ClInclude Include="src\patch.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

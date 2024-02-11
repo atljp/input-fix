@@ -20,3 +20,4 @@ void patchCall(void *addr, void *func);
 void patchThisToCdecl(void *addr, void *func);
 void callFunc(void *addr);
 void patchJump(void* addr, void* func);
+void patchKeycode(void* addr, uint8_t val);

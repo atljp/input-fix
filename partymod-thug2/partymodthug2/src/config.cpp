@@ -36,35 +36,7 @@ graphicsSettings graphics_settings;
 SDL_Window* window;
 
 void loadSettings();
-
-void __declspec(naked) fix_bg_plane()
-{
-	static uint32_t ret_addr = 0x004AD247;
-	static uint32_t unk_477B80 = 0x477B80;
-
-	if (!(*(uint8_t*)0x0069BAA8)) //Check for level select menu. Still breaks some menus, like "Enter Name" in classic or CAP
-	{
-		__asm {
-			mov eax, 0xFFFFFEE7
-			push eax
-			push 0xED7C6031
-			call unk_477B80
-			push 0xFFFFFFFF
-			push 0x63A298
-			jmp ret_addr
-		}
-	}
-	else
-	{
-		__asm {
-			push 0xFFFFFFFF
-			push 0x63A298
-			jmp ret_addr
-		}
-	}
-}
-
-
+void fix_bg_plane();
 
 void dumpSettings() {
 	printf("RESOLUTION X: %d\n", resX);
@@ -227,6 +199,7 @@ void writeConfigValues()
 	patchNop((void*)0x0048C330, 5);
 	patchNop((void*)0x004B2DC4, 5);
 	patchNop((void*)0x004B3405, 5);
+
 }
 
 
@@ -239,6 +212,7 @@ void patchWindow() {
 
 	//Don't load launcher settings from registry, use our own ini values instead
 	patchCall((void*)0x005F4591, writeConfigValues);
+	//Fix displayed keyboard buttons
 }
 
 
@@ -418,7 +392,32 @@ void patch_button_font(uint8_t sel)
 	//For any other value default PC buttons are displayed
 }
 
+void __declspec(naked) fix_bg_plane()
+{
+	static uint32_t ret_addr = 0x004AD247;
+	static uint32_t unk_477B80 = 0x477B80;
 
+	if (!(*(uint8_t*)0x0069BAA8)) //Check for level select menu. Still breaks some menus, like "Enter Name" in classic or CAP
+	{
+		__asm {
+			mov eax, 0xFFFFFEE7
+			push eax
+			push 0xED7C6031
+			call unk_477B80
+			push 0xFFFFFFFF
+			push 0x63A298
+			jmp ret_addr
+		}
+	}
+	else
+	{
+		__asm {
+			push 0xFFFFFFFF
+			push 0x63A298
+			jmp ret_addr
+		}
+	}
+}
 
 void __declspec(naked) patch_button_lookup()
 {

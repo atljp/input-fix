@@ -36,7 +36,6 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 	return false;
 }
 
-
 void initPatch() {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 

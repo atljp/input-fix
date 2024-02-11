@@ -3,7 +3,6 @@
 ## Known issues:
 
 - Separate menu controls needed
-- No flip / grab buttons listed in Edit Tricks menu (for PC controls)
 - Main menu text not adjusted for widescreen aspect ratio
 - No keybinds for online quick chat and taunts
 - Resolutions above 1920x1080 crash
