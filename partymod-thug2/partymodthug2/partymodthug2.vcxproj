@@ -23,6 +23,7 @@
     <ClCompile Include="src\dllmain.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\patch.cpp" />
+    <ClCompile Include="src\QB\LazyStruct.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\keycodes.h" />
     <ClInclude Include="src\patch.h" />
+    <ClInclude Include="src\QB\LazyStruct.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

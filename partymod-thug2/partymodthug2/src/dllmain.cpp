@@ -36,6 +36,7 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 	return false;
 }
 
+
 void initPatch() {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
@@ -94,7 +95,7 @@ void initPatch() {
 	patchBytesM((void*)0x0068EA7D, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
 	patchBytesM((void*)0x0068EABD, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
 	patchBytesM((void*)0x00668074, (BYTE*)"\x54\x32\x43\x72\x61\x63\x6B\x45\x00\x00\x00\x00\x00\x00\x00\x00", 16);
-		
+
 	//Connection refused fix
 	patchByte((void*)0x005F95BB, 0xEB);
 
@@ -128,6 +129,8 @@ void initPatch() {
 	//Increase qb Memory
 	patchByte((void*)(0x005BBCBE + 4), 0x10);
 	patchByte((void*)(0x005BBCD9 + 4), 0x10);
+
+
 }
 
 

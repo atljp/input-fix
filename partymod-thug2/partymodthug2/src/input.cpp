@@ -11,6 +11,7 @@
 
 #include "keycodes.h"
 
+#include <QB/LazyStruct.h>
 
 #define MAX_PLAYERS 2
 
@@ -63,6 +64,9 @@ struct keybinds keybinds;
 struct controllerbinds padbinds;
 
 uint8_t isUsingKeyboard = 1;
+
+
+
 
 struct playerslot {
 	SDL_GameController* controller;
@@ -372,7 +376,7 @@ uint8_t getKey(SDL_Scancode key) {
 
 	uint8_t* keyboardState = (uint8_t*)SDL_GetKeyboardState(NULL);
 
-	if (menu_on_screen) {
+	if (menu_on_screen()) {
 		// if a menu is on screen, ignore menu binds
 		if (key == SDL_SCANCODE_RETURN || key == SDL_SCANCODE_ESCAPE || key == SDL_SCANCODE_UP || key == SDL_SCANCODE_DOWN || key == SDL_SCANCODE_LEFT || key == SDL_SCANCODE_RIGHT) {
 			return 0;
@@ -389,6 +393,13 @@ void pollKeyboard(device* dev) {
 
 	uint8_t* keyboardState = (uint8_t*)SDL_GetKeyboardState(NULL);
 
+	char unk1 = { };
+	int unk2 = 0;
+	int unk3 = 0;
+	typedef bool __cdecl RunScript_NativeCall(uint32_t name, void* params, void* object, char a4, int a, int b);
+	RunScript_NativeCall* RunScript_Native = (RunScript_NativeCall*)(0x00475790);
+
+
 
 	if (keyboardState[keybinds.menu]) { //ESC selects TODO
 		dev->controlData[2] |= 0x01 << 3;
@@ -397,7 +408,8 @@ void pollKeyboard(device* dev) {
 		dev->controlData[2] |= 0x01 << 0;
 	}
 	if (keyboardState[keybinds.focus]) { // no control for left stick on keyboard
-		dev->controlData[2] |= 0x01 << 1;
+		//dev->controlData[2] |= 0x01 << 1;
+		RunScript_Native(0x3B4548B8, nullptr, nullptr, unk1, unk2, unk3);
 	}
 	if (keyboardState[keybinds.cameraSwivelLock]) {
 		dev->controlData[2] |= 0x01 << 2;
