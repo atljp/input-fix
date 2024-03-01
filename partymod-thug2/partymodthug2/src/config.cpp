@@ -7,8 +7,15 @@
 char* executableDirectory2[MAX_PATH];
 
 
-uint8_t isWindowed = 0;
-//uint32_t* resolution_setting = 0x008b455c;
+uint8_t* resolution_setting = (uint8_t*)0x007D643C;
+uint8_t* isFullscreen = (uint8_t*)0x00786AB4; //0x00786AB8; // or 0x00786A9C
+/* Correct ^ */
+
+
+
+/* Current ^ */
+
+
 uint8_t* antialiasing = (uint8_t*)(0x007D6434);
 uint8_t* hq_shadows = (uint8_t*)0x007D6435;
 uint8_t* distance_clipping = (uint8_t*)(0x007D643A);
@@ -16,9 +23,11 @@ uint8_t* clipping_distance = (uint8_t*)(0x007D6444);	//0x64 - 0x253 val*5 +95
 uint8_t* clipping_distance_2 = (uint8_t*)(0x007D6440); //0x00 - 0x64 val
 uint8_t* fog = (uint8_t*)(0x007D6436);
 HWND* hwnd = (HWND*)0x007D6A28;
+/* TODO ^ */
 
 uint8_t resbuffer[100000];	// buffer needed for high resolutions
 
+uint8_t isWindowed = 0;
 uint8_t borderless;
 
 typedef struct {
@@ -59,6 +68,8 @@ void enforceMaxResolution() {
 		}
 
 		i++;
+		printf("dmPelsWidth: %d\n", deviceMode.dmPelsWidth);
+		printf("dmPelsHeight: %d\n", deviceMode.dmPelsHeight);
 	}
 
 	if (!isValidX || !isValidY) {
@@ -66,6 +77,83 @@ void enforceMaxResolution() {
 		resY = 0;
 	}
 }
+
+void createSDLWindow()
+{
+	loadSettings();
+
+	SDL_Init(SDL_INIT_VIDEO);
+
+	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
+
+	if (isWindowed && borderless)
+		flags |= SDL_WINDOW_BORDERLESS;
+
+	//VS doesn't allow ! operator on integers
+	BOOL winbool = isWindowed ? TRUE : FALSE;
+	*isFullscreen = !winbool;
+
+	enforceMaxResolution();
+
+	resolution_setting = 0;
+
+	if (resX == 0 || resY == 0) {
+		SDL_DisplayMode displayMode;
+		SDL_GetDesktopDisplayMode(0, &displayMode);
+		resX = displayMode.w;
+		resY = displayMode.h;
+	}
+
+	if (resX < 640) {
+		resX = 640;
+	}
+	if (resY < 480) {
+		resY = 480;
+	}
+
+	window = SDL_CreateWindow("THUG2 - PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
+
+	if (!window)
+		printf("Failed to create window! Error: %s\n", SDL_GetError());
+	else
+		printf("Window successfully created!\n");
+
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+	*hwnd = wmInfo.info.win.window;
+
+	*(int*)ADDR_IsFocused = 1;
+	//*(int*)ADDR_OtherIsFocused = 1;
+	//*(int*)ADDR_AnotherIsFocused = 1;
+
+
+	/*
+
+	//DirectX9: D3DPRESENTPARAMS
+	if (isWindowed)
+	{
+		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); //Windowed = 1
+		SDL_ShowCursor(1);
+	}
+	else
+	{
+		SDL_ShowCursor(0);
+	}
+	*/
+		
+	// patch resolution of the window
+	patchDWord((void*)ADDR_WindowResoltionX, resX);
+	patchDWord((void*)ADDR_WindowResoltionY, resY);
+
+	//patch resolution of the game
+	//patchResolution();	
+
+	SDL_ShowCursor(1);
+}
+
+
+
 
 
 float* screenAspectRatio = (float*)0x00701340;
@@ -98,69 +186,6 @@ void patchResolution()
 		//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
 	}
 
-}
-
-
-void createSDLWindow()
-{
-	loadSettings();
-	SDL_Init(SDL_INIT_VIDEO);
-
-	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
-
-	if (isWindowed && borderless)
-		flags |= SDL_WINDOW_BORDERLESS;
-
-	enforceMaxResolution();
-
-	if (resX == 0 || resY == 0) {
-		SDL_DisplayMode displayMode;
-		SDL_GetDesktopDisplayMode(0, &displayMode);
-		resX = displayMode.w;
-		resY = displayMode.h;
-	}
-
-	if (resX < 640) {
-		resX = 640;
-	}
-	if (resY < 480) {
-		resY = 480;
-	}
-
-	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
-
-	if (!window)
-		printf("Failed to create window! Error: %s\n", SDL_GetError());
-	else
-		printf("Window successfully created!\n");
-
-	SDL_SysWMinfo wmInfo;
-	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(window, &wmInfo);
-	*hwnd = wmInfo.info.win.window;
-
-	*(int*)ADDR_IsFocused = 1;
-	//*(int*)ADDR_OtherIsFocused = 1;
-	//*(int*)ADDR_AnotherIsFocused = 1;
-
-	//DirectX9: D3DPRESENTPARAMS
-	if (isWindowed)
-	{
-		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); //Windowed = 1
-		SDL_ShowCursor(1);
-	}
-	else
-	{
-		SDL_ShowCursor(0);
-	}
-
-		
-	// patch resolution of the window
-	patchDWord((void*)ADDR_WindowResoltionX, resX);
-	patchDWord((void*)ADDR_WindowResoltionY, resY);
-
-	//patch resolution of the game
-	patchResolution();		
 }
 
 
@@ -212,7 +237,14 @@ void patchWindow() {
 
 	//Don't load launcher settings from registry, use our own ini values instead
 	patchCall((void*)0x005F4591, writeConfigValues);
-	//Fix displayed keyboard buttons
+	
+	patchCall((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
+	patchByte((void*)ADDR_FUNC_AspectRatio, 0xE9);
+
+
+	patchCall((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
+	patchByte((void*)ADDR_FUNC_ScreenAngleFactor, 0xE9);
+
 }
 
 

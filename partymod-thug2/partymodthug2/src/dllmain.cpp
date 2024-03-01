@@ -16,6 +16,7 @@
 #define VERSION_NUMBER_MINOR 1
 
 char* executableDirectory[MAX_PATH];
+BOOL dpi_result = SetProcessDPIAware(); //Prevent DPI scaling
 
 struct DummyScript
 {
@@ -144,7 +145,7 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 		// install patches
 		initPatch();
 		patchWindow();
-		patchInput();
+		//patchInput();
 		break;
 
 	case DLL_THREAD_ATTACH:

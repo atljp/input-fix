@@ -22,16 +22,21 @@
     <ClCompile Include="src\config.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
     <ClCompile Include="src\input.cpp" />
+    <ClCompile Include="src\Log\Logger.cpp" />
     <ClCompile Include="src\patch.cpp" />
     <ClCompile Include="src\QB\LazyStruct.cpp" />
+    <ClCompile Include="src\QB\QB.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\global.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\keycodes.h" />
+    <ClInclude Include="src\Log\Logger.h" />
     <ClInclude Include="src\patch.h" />
     <ClInclude Include="src\QB\LazyStruct.h" />
+    <ClInclude Include="src\QB\malloc.h" />
+    <ClInclude Include="src\QB\QB.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
