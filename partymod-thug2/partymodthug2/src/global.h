@@ -10,7 +10,7 @@
 #define ADDR_StringFromParams				0x0044C840
 
 #define ADDR_FUNC_CreateWindow				0x005F5860
-#define ADDR_Resbuffer						0x0070168C
+#define ADDR_Resbuffer						0x004B6C64
 #define ADDR_FixWindowPos					0x004D8891
 
 #define ADDR_HWND							0x007D6A28

@@ -15,13 +15,16 @@ namespace Script {
 	}
 
 	// --------------------------------------------
-	typedef void __fastcall StructClearCall(LazyStruct* struc);
-	StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 offset
 
-	void LazyStruct::Clear()
+
+	void  LazyStruct::StructClear()
 	{
+		typedef void StructClearCall(LazyStruct* struc);
+		StructClearCall* __thiscall StructClear = (StructClearCall*)(0x00477130); //Thug2 offset
+
 		StructClear(this);
 	}
+
 
 	//---------------------------------------
 	// Create a struct!
@@ -48,7 +51,7 @@ namespace Script {
 
 	void LazyStruct::s_free(LazyStruct* to_free)
 	{
-		to_free->Clear();
+		to_free->StructClear();
 		FreeQBStruct(to_free);
 	}
 

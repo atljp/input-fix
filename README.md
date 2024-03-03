@@ -26,7 +26,6 @@
 - Separate menu controls needed
 - Text inside the main menu wheel is not adjusted for the widescreen aspect ratios
 - No keybinds for online quick chat and taunts
-- Resolutions above 1920x1080 crash
 
 ## Visual Studio Project
 

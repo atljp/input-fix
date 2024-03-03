@@ -42,7 +42,7 @@ namespace Script
 	public:
 
 		void Initialize();
-		void Clear();
+		void StructClear();
 
 		static LazyStruct* s_create();
 		static void s_free(LazyStruct* to_free);
