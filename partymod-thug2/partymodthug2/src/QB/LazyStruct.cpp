@@ -17,17 +17,18 @@ namespace Script {
 	// --------------------------------------------
 
 	/*
+	// Alternative with __thiscall
 	void  LazyStruct::StructClear()
 	{
-		typedef void StructClearCall(LazyStruct* struc);
-		StructClearCall* __thiscall StructClear = (StructClearCall*)(0x00477130); //Thug2 offset
+		typedef void __thiscall StructClearCall(LazyStruct* struc);
+		StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 address
 
 		StructClear(this);
 	}
 	*/
 
 	typedef void __fastcall StructClearCall(LazyStruct* struc);
-	StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 offset
+	StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 address
 
 	void LazyStruct::Clear()
 	{
@@ -146,7 +147,7 @@ namespace Script {
 	}
 
 	typedef bool __fastcall Contains_NativeCall(LazyStruct* struc, uint32_t item_name);
-	Contains_NativeCall* Contains_Native = (Contains_NativeCall*)(0x00476AF0); //Thug2 offset
+	Contains_NativeCall* Contains_Native = (Contains_NativeCall*)(0x00476AF0); //Thug2 address
 
 	// See if we contain a valueless checksum
 	bool LazyStruct::Contains(uint32_t qbKey)
@@ -155,19 +156,170 @@ namespace Script {
 	}
 
 	typedef bool __fastcall ContainsFlag_NativeCall(LazyStruct* struc, uint32_t flag);
-	ContainsFlag_NativeCall* ContainsFlag_Native = (ContainsFlag_NativeCall*)(0x00476B40); //Thug2 offset
+	ContainsFlag_NativeCall* ContainsFlag_Native = (ContainsFlag_NativeCall*)(0x00476B40); //Thug2 address
 
 	// Contains a flag?
 	bool LazyStruct::ContainsFlag(uint32_t qbKey) { return ContainsFlag_Native(this, qbKey); }
 
+	typedef void __fastcall AddIntegerCall(LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
+	AddIntegerCall* AddInteger = (AddIntegerCall*)(0x00477B80); //Thug2 address
 
-	//new
+	void LazyStruct::SetIntItem(uint32_t qbKey, int32_t value)
+	{
+		AddInteger(this, 0, qbKey, value);
+	}
+
+	typedef void __fastcall AddFloatCall(LazyStruct* struc, int edx, uint32_t qbKey, float value);
+	AddFloatCall* AddFloat = (AddFloatCall*)(0x00477C60); //Thug2 address
+
+	void LazyStruct::SetFloatItem(uint32_t qbKey, float value)
+	{
+		AddFloat(this, 0, qbKey, value);
+	}
+
 	typedef void __fastcall AddChecksumCall(LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
-	AddChecksumCall* AddChecksum = (AddChecksumCall*)(0x00477D40);
+	AddChecksumCall* AddChecksum = (AddChecksumCall*)(0x00477D40); //Thug2 address
 
 	void LazyStruct::SetChecksumItem(uint32_t qbKey, uint32_t value)
 	{
 		AddChecksum(this, 0, qbKey, value);
+	}
+
+	typedef void __fastcall AddStringCall(LazyStruct* struc, int edx, uint32_t qbKey, char* value);
+	AddStringCall* AddString = (AddStringCall*)(0x004779D0); //Thug2 address
+
+	void LazyStruct::SetStringItem(uint32_t qbKey, char* value)
+	{
+		AddString(this, 0, qbKey, value);
+	}
+
+	typedef void __fastcall AddStructCall(LazyStruct* struc, int edx, uint32_t qbKey, LazyStruct* value);
+	AddStructCall* AddStruct = (AddStructCall*)(0x00478670); //Thug2 address
+
+	void LazyStruct::SetStructItem(uint32_t qbKey, LazyStruct* value)
+	{
+		AddStruct(this, 0, qbKey, value);
+	}
+
+	typedef void __fastcall AddArrayCall(LazyStruct* struc, int edx, uint32_t qbKey, void* value);
+	AddArrayCall* AddArray = (AddArrayCall*)(0x00478B00); //Thug2 address
+
+	void LazyStruct::SetArrayItem(uint32_t qbKey, void* value)
+	{
+		AddArray(this, 0, qbKey, value);
+	}
+
+	void LazyStruct::RedefineArrayItem(uint32_t qbKey, void* value)
+	{
+		LazyStructItem* itm = GetItem(qbKey);
+
+		if (itm)
+			itm->value = (uint32_t)value;
+	}
+
+	//---------------------------------------
+	// Get integer item
+	//---------------------------------------
+
+	int LazyStruct::GetInteger(uint32_t qbKey)
+	{
+		LazyStructItem* item = GetItem(qbKey);
+		if (!item)
+			return 0;
+
+		return item->value;
+	}
+
+	//---------------------------------------
+	// Get float item
+	//---------------------------------------
+
+	float LazyStruct::GetFloat(uint32_t qbKey)
+	{
+		LazyStructItem* item = GetItem(qbKey);
+		if (!item)
+			return 0;
+
+		return (float)item->value;
+	}
+
+	//---------------------------------------
+	// Get checksum item
+	//---------------------------------------
+
+	uint32_t LazyStruct::GetChecksum(uint32_t qbKey)
+	{
+		LazyStructItem* item = GetItem(qbKey);
+		if (!item)
+			return 0;
+
+		return (uint32_t)item->value;
+	}
+
+	//---------------------------------------
+	// Get array item
+	//---------------------------------------
+
+	//~ THAWPlus::LazyArray *LazyStruct::GetArray(uint32_t qbKey)
+	void* LazyStruct::GetArray(uint32_t qbKey)
+	{
+		LazyStructItem* item = GetItem(qbKey);
+		if (!item)
+			return nullptr;
+
+		//~ return (THAWPlus::LazyArray*) item -> value;
+		return (void*)item->value;
+	}
+
+	//---------------------------------------
+	// Get string item
+	//---------------------------------------
+
+	char* LazyStruct::GetString(uint32_t qbKey)
+	{
+		LazyStructItem* item = GetItem(qbKey);
+
+		if (item && ((item->itemType >> 1) == QBTYPE_STRING))
+			return (char*)item->value;
+
+		return nullptr;
+	}
+
+	//---------------------------------------
+	// Get structure item
+	//---------------------------------------
+
+	LazyStruct* LazyStruct::GetStruct(uint32_t qbKey)
+	{
+		LazyStructItem* item = GetItem(qbKey);
+		if (!item)
+			return nullptr;
+
+		return (LazyStruct*)item->value;
+	}
+
+	//---------------------------------------
+	// Append data from another structure. (__thiscall)
+	//---------------------------------------
+
+	typedef void* __fastcall AppendStructure_NativeCall(LazyStruct* struc, LazyStruct* append_from);
+	AppendStructure_NativeCall* AppendStructure_Native = (AppendStructure_NativeCall*)(0x00478540); //Thug2 address
+
+	void* LazyStruct::AppendStructure(LazyStruct* append_from)
+	{
+		return AppendStructure_Native(this, append_from);
+	}
+
+	//---------------------------------------
+	// Add pointer to an array.  (__thiscall)
+	//---------------------------------------
+
+	typedef void __fastcall AddArrayPointer_NativeCall(LazyStruct* struc, uint32_t id, void* arr);
+	AddArrayPointer_NativeCall* AddArrayPointer_Native = (AddArrayPointer_NativeCall*)(0x004780D0); //Thug2 address
+
+	void LazyStruct::AddArrayPointer(uint32_t id, void* arr)
+	{
+		AddArrayPointer_Native(this, id, arr);
 	}
 
 }

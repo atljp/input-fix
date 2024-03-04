@@ -37,7 +37,6 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 	return false;
 }
 
-
 void initPatch() {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
@@ -169,5 +168,18 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 	return TRUE;
 }
 
+/*
+	//Hook game loop
 
+	typedef int __cdecl UpdateByteStuff_Native();
+	UpdateByteStuff_Native* UpdateByteStuff = (UpdateByteStuff_Native*)(0x005BDD60);
 
+	int UpdateByteStuff_Hacked()
+	{
+		//Do stuff here
+
+		// Call original func
+		return UpdateByteStuff();
+	}
+	patchCall((void*)0x0044EF8E, (void*)UpdateByteStuff_Hacked);
+*/

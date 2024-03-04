@@ -55,29 +55,23 @@ namespace Script
 		bool Contains(uint32_t qbKey);
 		bool ContainsFlag(uint32_t qbKey);
 
-		//new
+		void SetIntItem(uint32_t qbKey, int32_t value);
+		void SetFloatItem(uint32_t qbKey, float value);
 		void SetChecksumItem(uint32_t qbKey, uint32_t value);
+		void SetStringItem(uint32_t qbKey, char* value);
+		void SetStructItem(uint32_t qbKey, LazyStruct* value); // Sets item that already exists!
+		void SetArrayItem(uint32_t qbKey, void* value);
 
-		/*	
-		void AddArrayPointer(uint32_t id, void* arr);
-		void* AppendStructure(LazyStruct* append_from);
+		void RedefineArrayItem(uint32_t qbKey, void* value); // Redefine an existing array item
+
 		int GetInteger(uint32_t qbKey);
 		float GetFloat(uint32_t qbKey);
 		uint32_t GetChecksum(uint32_t qbKey);
-		//~ GHWTP::LazyArray *GetArray(uint32_t qbKey);
 		void* GetArray(uint32_t qbKey);
 		char* GetString(uint32_t qbKey);
 		LazyStruct* GetStruct(uint32_t qbKey);
-		// Sets item that already exists!
-		void SetStructItem(uint32_t qbKey, LazyStruct* value);
-		void SetIntItem(uint32_t qbKey, int32_t value);
-		void SetFloatItem(uint32_t qbKey, float value);
-		
-		void SetStringItem(uint32_t qbKey, char* value);
-		//~ void SetArrayItem(uint32_t qbKey, GHWTP::LazyArray* value);
-		void SetArrayItem(uint32_t qbKey, void* value);
-		//~ void RedefineArrayItem(uint32_t qbKey, GHWTP::LazyArray* value);
-		void RedefineArrayItem(uint32_t qbKey, void* value);
-		*/
+
+		void* AppendStructure(LazyStruct* append_from);
+		void AddArrayPointer(uint32_t id, void* arr);
 	};
 }

@@ -1,16 +1,9 @@
 #pragma once
-
-
 // Various memory allocation calls used by classes in the game. Since the game's memory management is different than ours, any game class created
 // that uses dynamic memory allocation should be using these calls so that the game cleans them up properly.
 
-// TODO: FIND PROPER ADDRESSES FOR THESE!
-// WHERE ARE THESE USED IN THAW?
-//
-// (THESE ARE GHWT ADDRESSES)
-
 /// mallocVariant1
-static void * (__cdecl * const qbItemMalloc)(size_t size, int unused) = reinterpret_cast<void * (__cdecl *)(size_t size, int unused)>(0x00483410); // ???
+static void * (__cdecl * const qbItemMalloc)(size_t size, int unused) = reinterpret_cast<void * (__cdecl *)(size_t size, int unused)>(0x00483410); // ??? ghwt or thaw
 
 /// Used for qbstructs
 static void * (__cdecl * const qbMalloc)(size_t size, int unused) = reinterpret_cast<void * (__cdecl *)(size_t size, int unused)>(0x00409030); //Thug2 offset
