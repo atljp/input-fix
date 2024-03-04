@@ -21,6 +21,7 @@ void patchInput();
 uint8_t isKeyboardTyping();
 uint8_t menu_on_screen();
 void CheckChatHotkey();
+bool TextInputInNetGame();
 
 
 void __cdecl set_actuators(int port, uint16_t hight, uint16_t low);
@@ -67,7 +68,8 @@ struct controllerbinds padbinds;
 
 uint8_t isUsingKeyboard = 1;
 
-
+typedef bool __cdecl ScriptObjectExists_NativeCall(Script::LazyStruct* params);
+ScriptObjectExists_NativeCall* ScriptObjectExists_Native = (ScriptObjectExists_NativeCall*)(0x00462340); //Thug2 offset
 
 
 struct playerslot {
@@ -389,6 +391,69 @@ uint8_t getKey(SDL_Scancode key) {
 }
 
 int buffer = 0;
+int tauntbuffer = 0;
+
+bool TextInputInNetGame() {
+
+	bool has_keyboard = false;
+	bool has_menu = false;
+	bool has_dialog = false;
+	bool has_quit_dialog = false;
+
+	Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
+
+	// id, keyboard_anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0x31631B98);
+	has_keyboard = ScriptObjectExists_Native(checkParams);
+	checkParams->Clear();
+
+	// id, current_menu_anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0xF53D1D83);
+	has_menu = ScriptObjectExists_Native(checkParams);
+	checkParams->Clear();
+
+	// id, dialog_box_Anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0x3B56E746);
+	has_dialog = ScriptObjectExists_Native(checkParams);
+	checkParams->Clear();
+
+	// id, quit_dialog_anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0x4C8BF619);
+	has_quit_dialog = ScriptObjectExists_Native(checkParams);
+
+	Script::LazyStruct::s_free(checkParams);
+
+	return (!has_keyboard && !has_menu && !has_dialog && !has_quit_dialog);
+	
+}
+
+void taunt(uint8_t tauntkey) {
+
+	if (TextInputInNetGame()) {
+		Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
+
+		switch (tauntkey) {
+		case 1:
+			checkParams->SetChecksumItem(0xB53D0E0F, 0xE5FD359); // string_id, props_string
+			break;
+		case 2:
+			checkParams->SetChecksumItem(0xB53D0E0F, 0xBEEA3518); // string_id, your_daddy_string
+			break;
+		case 3:
+			checkParams->SetChecksumItem(0xB53D0E0F, 0x4525ADBD); // string_id, get_some_string
+			break;
+		case 4:
+			checkParams->SetChecksumItem(0xB53D0E0F, 0xA36DBEE1); // string_id, no_way_string
+			break;
+		default:
+			printf("Invalid taunt\n");
+			break;
+		}
+
+		RunScript(0x2C43B5BA, checkParams, nullptr); // Script: SendTauntMessage
+		Script::LazyStruct::s_free(checkParams);
+	}
+}
 
 void pollKeyboard(device* dev) {
 
@@ -397,22 +462,63 @@ void pollKeyboard(device* dev) {
 
 	uint8_t* keyboardState = (uint8_t*)SDL_GetKeyboardState(NULL);
 
-	char unk1 = { };
-	int unk2 = 0;
-	int unk3 = 0;
-
 	if (buffer > 0)
 		buffer--;
 
-	//Quick chat = RETURN - checks for window focus flag
-	if (keyboardState[0x28] && buffer == 0 && !isKeyboardTyping()) {
-		CheckChatHotkey();
-		buffer = 40;
+	if (tauntbuffer > 0)
+		tauntbuffer--;
+
+	// ----------------------------------------------
+	// STATIC KEYS
+	// ----------------------------------------------
+
+	// F1 Taunt
+	if (keyboardState[0x3A] && tauntbuffer == 0 && !isKeyboardTyping()) {
+		taunt(1);
+		tauntbuffer = 120;
 	}
 
-	if (keyboardState[keybinds.menu]) { //ESC selects TODO
-		dev->controlData[2] |= 0x01 << 3;
+	// F2 taunt
+	if (keyboardState[0x3B] && tauntbuffer == 0 && !isKeyboardTyping()) {
+		taunt(2);
+		tauntbuffer = 120;
 	}
+
+	// F3 taunt
+	if (keyboardState[0x3C] && tauntbuffer == 0 && !isKeyboardTyping()) {
+		taunt(3);
+		tauntbuffer = 120;
+	}
+	// F4 taunt
+	if (keyboardState[0x3D] && tauntbuffer == 0 && !isKeyboardTyping()) {
+		taunt(4);
+		tauntbuffer = 120;
+	}
+
+	// Quick chat = RETURN
+	if (keyboardState[0x28] && buffer == 0 && !isKeyboardTyping()) {
+		if (menu_on_screen()) {
+			dev->controlData[3] |= 0x01 << 6;
+		} else if (*(uint8_t*)(0x7CCDF8)) {
+			CheckChatHotkey();
+		}
+		buffer = 20;
+	}
+
+	// Menu = ESC
+	if (keyboardState[0x29] && buffer == 0) {
+		if (menu_on_screen()) {
+			dev->controlData[3] |= 0x01 << 5;
+		} else {
+			dev->controlData[2] |= 0x01 << 3;
+		}
+		buffer = 20;
+	}
+
+	// ----------------------------------------------
+	// USER KEYS
+	// ----------------------------------------------
+
 	if (keyboardState[keybinds.cameraToggle]) {
 		dev->controlData[2] |= 0x01 << 0;
 	}
@@ -1044,10 +1150,6 @@ void patchPs2Buttons()
 	//patch_button_font();
 }
 
-typedef bool __cdecl ScriptObjectExists_NativeCall(Script::LazyStruct* params);
-ScriptObjectExists_NativeCall* ScriptObjectExists_Native = (ScriptObjectExists_NativeCall*)(0x00462340); //Thug2 offset
-
-
 void patchInput() {
 	// patch SIO::Device
 	// process
@@ -1079,38 +1181,8 @@ void CheckChatHotkey() {
 	// We know the key is pressed. We need to make sure that
 	// we're not in a menu, dialog box, etc.
 
-	bool has_keyboard = false;
-	bool has_menu = false;
-	bool has_dialog = false;
-	bool has_quit_dialog = false;
-
-	Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
-
-	// id, keyboard_anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0x31631B98);
-	has_keyboard = ScriptObjectExists_Native(checkParams);
-	checkParams->Clear();
-
-	// id, current_menu_anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0xF53D1D83);
-	has_menu = ScriptObjectExists_Native(checkParams);
-	checkParams->Clear();
-
-	// id, dialog_box_Anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0x3B56E746);
-	has_dialog = ScriptObjectExists_Native(checkParams);
-	checkParams->Clear();
-
-	// id, quit_dialog_anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0x4C8BF619);
-	has_quit_dialog = ScriptObjectExists_Native(checkParams);
-
-	Script::LazyStruct::s_free(checkParams);
-
-	if (!has_keyboard && !has_menu && !has_dialog && !has_quit_dialog)
-	{
+	if (TextInputInNetGame) {
 		// enter_kb_chat
 		RunScript(0x3B4548B8, nullptr, nullptr);
 	}
-
 }

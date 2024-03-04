@@ -10,22 +10,17 @@
 - Blur fix
 - Selectable languages (English, French, German)
 - Selectable button fonts (Keyboard, PS2, XBOX, or NGC)
-- Increased memory which supports stability and level merging
+- Increased script memory to increase stability (e.g., for level merging)
 - THUG Airdrift
 
 ## TODO
 
-- Adjustable Spin delay `skater_xbox_shoulder_turn_no_rotate_time`
 - Toggle for walk spin `flip_skater_if_180_off`
 - Invert camera stick
 - Adjustable Drop down key(s)
 - Change GameSpy to OpenSpy
-
-## Known issues:
-
 - Separate menu controls needed
 - Text inside the main menu wheel is not adjusted for the widescreen aspect ratios
-- No keybinds for online quick chat and taunts
 
 ## Visual Studio Project
 

@@ -76,10 +76,16 @@ void initPatch() {
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
 
 	//Air drift
-	if (getIniBool("Miscellaneous", "THUGAirDrift", 0, configFile))
+	if (getIniBool("Gameplay", "THUGAirDrift", 0, configFile))
 	{
 		patchNop((void*)0x00526A36, 8); //Lock camera fix
 		patchNop((void*)ADDR_AirDrift, 8);
+	}
+
+	//Spin delay
+	if (!getIniBool("Gameplay", "SpinDelay", 1, configFile))
+	{
+		patchBytesM((void*)ADDR_SpinDelay, (BYTE*)"\x6A\x00\x90\x90\x90", 5);
 	}
 
 	//Change strings: gamespy to openspy

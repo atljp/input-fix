@@ -292,7 +292,7 @@ void loadKeyBinds(struct keybinds* bindsOut)
 	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
 
 	if (bindsOut) {
-		bindsOut->menu = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Pause", SDL_SCANCODE_RETURN, configFile);
+		//bindsOut->menu = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Pause", SDL_SCANCODE_RETURN, configFile);
 		bindsOut->cameraToggle = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "ViewToggle", SDL_SCANCODE_TAB, configFile);
 		bindsOut->cameraSwivelLock = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "SwivelLock", SDL_SCANCODE_GRAVE, configFile);
 		bindsOut->focus = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Focus", SDL_SCANCODE_KP_0, configFile);
@@ -440,80 +440,82 @@ void __declspec(naked) patch_button_lookup()
 		jne label_next_1
 		mov al, 0x33
 		jmp label_continue
-		label_next_1 :
+	label_next_1 :
 		cmp eax, 0x1
-			jne label_next_2
-			mov al, 0x32
-			jmp label_continue
-			label_next_2 :
+		jne label_next_2
+		mov al, 0x32
+		jmp label_continue
+	label_next_2 :
 		cmp eax, 0x2
-			jne label_next_3
-			mov al, 0x31
-			jmp label_continue
-			label_next_3 :
+		jne label_next_3
+		mov al, 0x31
+		jmp label_continue
+	label_next_3 :
 		cmp eax, 0x3
-			jne label_next_4
-			mov al, 0x30
-			jmp label_continue
-			label_next_4 :
+		jne label_next_4
+		mov al, 0x30
+		jmp label_continue
+	label_next_4 :
 		cmp eax, 0x4
-			jne label_next_5
-			xor al, al
-			label_a :
+		jne label_next_5
+		xor al, al
+	label_a :
 		lea eax, dword ptr ds : [eax * 2 + 0x65]
-			jmp label_continue
-			label_next_5 :
+		jmp label_continue
+	label_next_5 :
 		cmp eax, 0x5
-			jne label_next_6
-			xor al, al
-			label_b :
+		jne label_next_6
+		xor al, al
+	label_b :
 		lea eax, dword ptr ds : [eax * 2 + 0x66]
-			jmp label_continue
-			label_next_6 :
+		jmp label_continue
+	label_next_6 :
 		cmp eax, 0x6
-			jne label_next_7
-			mov al, 0x1
-			jmp label_a
-			label_next_7 :
+		jne label_next_7
+		mov al, 0x1
+		jmp label_a
+	label_next_7 :
 		cmp eax, 0x7
-			jne label_next_8
-			mov al, 0x1
-			jmp label_b
-			label_next_8 :
+		jne label_next_8
+		mov al, 0x1
+		jmp label_b
+	label_next_8 :
 		mov al, cl
-			jmp label_continue
+		jmp label_continue
 
-			label_continue :
+	label_continue :
 		mov bl, al
-			xor edx, edx
-			lea ecx, dword ptr ds : [ebx - 0x30]
-			cmp cl, 0x9
-			ja label_h_1
-			movsx edx, bl
-			sub edx, 0x30
-			jmp label_h_3
-			label_h_1 :
+		xor edx, edx
+		lea ecx, dword ptr ds : [ebx - 0x30]
+		cmp cl, 0x9
+		ja label_h_1
+		movsx edx, bl
+		sub edx, 0x30
+		jmp label_h_3
+	label_h_1 :
 		mov al, bl
-			sub al, 0x61
-			cmp al, 0x15
-			ja label_h_2
-			movsx edx, bl
-			sub edx, 0x57
-			jmp label_h_3
-			label_h_2 :
+		sub al, 0x61
+		cmp al, 0x15
+		ja label_h_2
+		movsx edx, bl
+		sub edx, 0x57
+		jmp label_h_3
+	label_h_2 :
 		mov al, bl
-			sub al, 0x41
-			cmp al, 0x15
-			ja label_h_3
-			movsx edx, bl
-			sub edx, 0x37
-			label_h_3:
+		sub al, 0x41
+		cmp al, 0x15
+		ja label_h_3
+		movsx edx, bl
+		sub edx, 0x37
+	label_h_3 :
 		mov eax, edx
-			pop ebx
-			pop ebp
-			ret
-			label_end :
+		pop ebx
+		pop ebp
+		ret
+	label_end :
 		mov al, cl
-			jmp label_continue
+		jmp label_continue
 	}
+
 }
+

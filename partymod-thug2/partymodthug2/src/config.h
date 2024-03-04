@@ -13,7 +13,7 @@
 #define CONFIG_FILE_NAME "partymod.ini"
 
 struct keybinds {
-	SDL_Scancode menu;
+	//SDL_Scancode menu;
 	SDL_Scancode cameraToggle;
 	SDL_Scancode cameraSwivelLock;
 	SDL_Scancode focus;

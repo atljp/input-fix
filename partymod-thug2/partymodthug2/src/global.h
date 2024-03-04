@@ -24,7 +24,6 @@
 #define ADDR_FUNC_AspectRatio				0x004A0780
 #define ADDR_FUNC_ScreenAngleFactor			0x004A07C0
 
-
 #define ADDR_ResFromReg_A					0x005F367A
 #define ADDR_ResFromReg_B					0x005F457E
 
@@ -35,8 +34,9 @@
 #define ADDR_FUNC_LangFromReg				0x005B60DB
 #define	ADDR_PlatformFlag					0x0051F4C8
 
-#define ADDR_SpinLagL						0x00504239
-#define ADDR_SpinLagR						0x0050430B
+#define ADDR_SpinLagL						0x00504239 // unused
+#define ADDR_SpinLagR						0x0050430B // unused
+#define ADDR_SpinDelay						0x00504223
 
 #define ADDR_IntroMovies					0x0044F830
 #define ADDR_AirDrift						0x00526A40
