@@ -1082,7 +1082,7 @@ void CheckChatHotkey() {
 	bool has_keyboard = false;
 	bool has_menu = false;
 	bool has_dialog = false;
-	bool flip = false;
+	bool has_quit_dialog = false;
 
 	Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
 
@@ -1099,10 +1099,15 @@ void CheckChatHotkey() {
 	// id, dialog_box_Anchor
 	checkParams->SetChecksumItem(0x40C698AF, 0x3B56E746);
 	has_dialog = ScriptObjectExists_Native(checkParams);
+	checkParams->Clear();
+
+	// id, quit_dialog_anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0x4C8BF619);
+	has_quit_dialog = ScriptObjectExists_Native(checkParams);
 
 	Script::LazyStruct::s_free(checkParams);
 
-	if (!has_keyboard && !has_menu && !has_dialog)
+	if (!has_keyboard && !has_menu && !has_dialog && !has_quit_dialog)
 	{
 		// enter_kb_chat
 		RunScript(0x3B4548B8, nullptr, nullptr);
