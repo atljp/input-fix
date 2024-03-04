@@ -429,27 +429,28 @@ bool TextInputInNetGame() {
 
 void taunt(uint8_t tauntkey) {
 
+	uint8_t modstate = SDL_GetModState();
+
 	if (TextInputInNetGame()) {
 		Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
 
 		switch (tauntkey) {
 		case 1:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0xE5FD359); // string_id, props_string
+			checkParams->SetChecksumItem(0xB53D0E0F, 0xE5FD359);	// string_id, props_string
 			break;
 		case 2:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0xBEEA3518); // string_id, your_daddy_string
+			checkParams->SetChecksumItem(0xB53D0E0F, 0xBEEA3518);	// string_id, your_daddy_string
 			break;
 		case 3:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0x4525ADBD); // string_id, get_some_string
+			checkParams->SetChecksumItem(0xB53D0E0F, 0x4525ADBD);	// string_id, get_some_string
 			break;
 		case 4:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0xA36DBEE1); // string_id, no_way_string
+			checkParams->SetChecksumItem(0xB53D0E0F, 0xA36DBEE1);	// string_id, no_way_string
 			break;
 		default:
 			printf("Invalid taunt\n");
 			break;
 		}
-
 		RunScript(0x2C43B5BA, checkParams, nullptr); // Script: SendTauntMessage
 		Script::LazyStruct::s_free(checkParams);
 	}
@@ -489,8 +490,8 @@ void pollKeyboard(device* dev) {
 		taunt(3);
 		tauntbuffer = 120;
 	}
-	// F4 taunt
-	if (keyboardState[0x3D] && tauntbuffer == 0 && !isKeyboardTyping()) {
+	// F4 taunt (don't send taunt when quitting game with ALT+F4)
+	if (keyboardState[0x3D] && !keyboardState[0xE2] && tauntbuffer == 0 && !isKeyboardTyping()) {
 		taunt(4);
 		tauntbuffer = 120;
 	}
