@@ -16,12 +16,21 @@ namespace Script {
 
 	// --------------------------------------------
 
-
+	/*
 	void  LazyStruct::StructClear()
 	{
 		typedef void StructClearCall(LazyStruct* struc);
 		StructClearCall* __thiscall StructClear = (StructClearCall*)(0x00477130); //Thug2 offset
 
+		StructClear(this);
+	}
+	*/
+
+	typedef void __fastcall StructClearCall(LazyStruct* struc);
+	StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 offset
+
+	void LazyStruct::Clear()
+	{
 		StructClear(this);
 	}
 
@@ -51,7 +60,7 @@ namespace Script {
 
 	void LazyStruct::s_free(LazyStruct* to_free)
 	{
-		to_free->StructClear();
+		to_free->Clear();
 		FreeQBStruct(to_free);
 	}
 
@@ -150,5 +159,15 @@ namespace Script {
 
 	// Contains a flag?
 	bool LazyStruct::ContainsFlag(uint32_t qbKey) { return ContainsFlag_Native(this, qbKey); }
+
+
+	//new
+	typedef void __fastcall AddChecksumCall(LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
+	AddChecksumCall* AddChecksum = (AddChecksumCall*)(0x00477D40);
+
+	void LazyStruct::SetChecksumItem(uint32_t qbKey, uint32_t value)
+	{
+		AddChecksum(this, 0, qbKey, value);
+	}
 
 }

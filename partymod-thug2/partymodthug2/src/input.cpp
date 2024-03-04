@@ -12,6 +12,7 @@
 #include "keycodes.h"
 
 #include <QB/LazyStruct.h>
+#include <QB/Qb.h>
 
 #define MAX_PLAYERS 2
 
@@ -19,6 +20,7 @@ void patchPs2Buttons();
 void patchInput();
 uint8_t isKeyboardTyping();
 uint8_t menu_on_screen();
+void CheckChatHotkey();
 
 
 void __cdecl set_actuators(int port, uint16_t hight, uint16_t low);
@@ -386,6 +388,8 @@ uint8_t getKey(SDL_Scancode key) {
 	return keyboardState[key];
 }
 
+int buffer = 0;
+
 void pollKeyboard(device* dev) {
 
 	dev->isValid = 1;
@@ -396,10 +400,15 @@ void pollKeyboard(device* dev) {
 	char unk1 = { };
 	int unk2 = 0;
 	int unk3 = 0;
-	typedef bool __cdecl RunScript_NativeCall(uint32_t name, void* params, void* object, char a4, int a, int b);
-	RunScript_NativeCall* RunScript_Native = (RunScript_NativeCall*)(0x00475790);
 
+	if (buffer > 0)
+		buffer--;
 
+	//Quick chat = RETURN - checks for window focus flag
+	if (keyboardState[0x28] && buffer == 0 && !isKeyboardTyping()) {
+		CheckChatHotkey();
+		buffer = 40;
+	}
 
 	if (keyboardState[keybinds.menu]) { //ESC selects TODO
 		dev->controlData[2] |= 0x01 << 3;
@@ -408,8 +417,7 @@ void pollKeyboard(device* dev) {
 		dev->controlData[2] |= 0x01 << 0;
 	}
 	if (keyboardState[keybinds.focus]) { // no control for left stick on keyboard
-		//dev->controlData[2] |= 0x01 << 1;
-		RunScript_Native(0x3B4548B8, nullptr, nullptr, unk1, unk2, unk3);
+		dev->controlData[2] |= 0x01 << 1;
 	}
 	if (keyboardState[keybinds.cameraSwivelLock]) {
 		dev->controlData[2] |= 0x01 << 2;
@@ -511,8 +519,8 @@ void pollKeyboard(device* dev) {
 uint8_t isKeyboardTyping()
 {
 	uint8_t* keyboard_on_screen = (uint8_t*)0x007CE46E;
-	if (*keyboard_on_screen)
-		printf("Keyboard on screen!!!!!\n");
+	//if (*keyboard_on_screen)
+		//printf("Keyboard on screen!!!!!\n");
 	return *keyboard_on_screen;
 }
 
@@ -1036,6 +1044,10 @@ void patchPs2Buttons()
 	//patch_button_font();
 }
 
+typedef bool __cdecl ScriptObjectExists_NativeCall(Script::LazyStruct* params);
+ScriptObjectExists_NativeCall* ScriptObjectExists_Native = (ScriptObjectExists_NativeCall*)(0x00462340); //Thug2 offset
+
+
 void patchInput() {
 	// patch SIO::Device
 	// process
@@ -1058,7 +1070,42 @@ void patchInput() {
 
 	// some config call relating to the dinput devices
 	patchNop((void*)0x004E2C16, 5);
+
 }
 
 
+void CheckChatHotkey() {
 
+	// We know the key is pressed. We need to make sure that
+	// we're not in a menu, dialog box, etc.
+
+	bool has_keyboard = false;
+	bool has_menu = false;
+	bool has_dialog = false;
+	bool flip = false;
+
+	Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
+
+	// id, keyboard_anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0x31631B98);
+	has_keyboard = ScriptObjectExists_Native(checkParams);
+	checkParams->Clear();
+
+	// id, current_menu_anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0xF53D1D83);
+	has_menu = ScriptObjectExists_Native(checkParams);
+	checkParams->Clear();
+
+	// id, dialog_box_Anchor
+	checkParams->SetChecksumItem(0x40C698AF, 0x3B56E746);
+	has_dialog = ScriptObjectExists_Native(checkParams);
+
+	Script::LazyStruct::s_free(checkParams);
+
+	if (!has_keyboard && !has_menu && !has_dialog)
+	{
+		// enter_kb_chat
+		RunScript(0x3B4548B8, nullptr, nullptr);
+	}
+
+}

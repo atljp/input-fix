@@ -42,7 +42,7 @@ namespace Script
 	public:
 
 		void Initialize();
-		void StructClear();
+		void Clear();
 
 		static LazyStruct* s_create();
 		static void s_free(LazyStruct* to_free);
@@ -54,6 +54,9 @@ namespace Script
 
 		bool Contains(uint32_t qbKey);
 		bool ContainsFlag(uint32_t qbKey);
+
+		//new
+		void SetChecksumItem(uint32_t qbKey, uint32_t value);
 
 		/*	
 		void AddArrayPointer(uint32_t id, void* arr);
@@ -69,7 +72,7 @@ namespace Script
 		void SetStructItem(uint32_t qbKey, LazyStruct* value);
 		void SetIntItem(uint32_t qbKey, int32_t value);
 		void SetFloatItem(uint32_t qbKey, float value);
-		void SetChecksumItem(uint32_t qbKey, uint32_t value);
+		
 		void SetStringItem(uint32_t qbKey, char* value);
 		//~ void SetArrayItem(uint32_t qbKey, GHWTP::LazyArray* value);
 		void SetArrayItem(uint32_t qbKey, void* value);
