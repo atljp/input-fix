@@ -10,16 +10,15 @@
 - Blur fix
 - Selectable languages (English, French, German)
 - Selectable button fonts (Keyboard, PS2, XBOX, or NGC)
-- Increased script memory to increase stability (e.g., for level merging)
+- Stability fixes (e.g., for level merging)
 - THUG Airdrift
 
 ## TODO
 
-- Toggle for walk spin `flip_skater_if_180_off`
 - Invert camera stick
 - Adjustable Drop down key(s)
 - Change GameSpy to OpenSpy
-- Separate menu controls needed
+- Separate menu controls
 - Text inside the main menu wheel is not adjusted for the widescreen aspect ratios
 
 ## Visual Studio Project

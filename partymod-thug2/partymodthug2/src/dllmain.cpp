@@ -12,6 +12,9 @@
 #include <config.h>
 #include <time.h>
 
+#include <QB/LazyStruct.h>
+#include <QB/Qb.h>
+
 #define VERSION_NUMBER_MAJOR 0
 #define VERSION_NUMBER_MINOR 1
 
@@ -35,6 +38,87 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 	if (pScript->script_name == 0x6AEC78DA)
 		return true;
 	return false;
+}
+
+const uint8_t enter_kb_chat_new[] = {
+	0x01, 0x16, 0xDF, 0x01, 0xA8, 0xBF, 0x16, 0xCA, 0xAF, 0xCF, 0x7B, 0x07, 0x17, 0x12, 0x02, 0x00, 0x00,
+	0x01, 0x16, 0x54, 0x52, 0x42, 0xF0, 0x16, 0x85, 0xD2, 0xCE, 0xB1, 0x16, 0x9D, 0x56, 0xB7, 0x02, 0x16,
+	0x53, 0x19, 0x26, 0x7F, 0x07, 0x1F, 0x00, 0x00, 0xA0, 0x43, 0x00, 0x00, 0x82, 0x43, 0x16, 0x7F, 0xD4,
+	0xB7, 0x5D, 0x07, 0x16, 0x0B, 0x85, 0x4C, 0x5D, 0x16, 0x79, 0xB5, 0x1E, 0x4F, 0x07, 0x1B, 0x10, 0x00,
+	0x00, 0x00, 0x45, 0x4E, 0x5A, 0x45, 0x52, 0x20, 0x4D, 0x45, 0x53, 0x53, 0x41, 0x47, 0x45, 0x3A, 0x20,
+	0x00, 0x16, 0x78, 0xCE, 0x92, 0xA5, 0x07, 0x1B, 0x0E, 0x00, 0x00, 0x00, 0x45, 0x4E, 0x54, 0x45, 0x52,
+	0x20, 0x4D, 0x45, 0x53, 0x53, 0x41, 0x47, 0x45, 0x00, 0x16, 0x70, 0x3B, 0xEF, 0x68, 0x07, 0x17, 0x01,
+	0x00, 0x00, 0x00, 0x16, 0xC4, 0xA1, 0xE3, 0x69, 0x07, 0x17, 0x00, 0x02, 0x00, 0x00, 0x16, 0x80, 0xD2,
+	0x50, 0x2A, 0x01, 0x16, 0xDF, 0x01, 0xA8, 0xBF, 0x16, 0xCA, 0xAF, 0xCF, 0x7B, 0x07, 0x17, 0x68, 0x01,
+	0x00, 0x00, 0x01, 0x24
+};
+
+
+typedef uint32_t __cdecl CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
+CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Native = (CalculateScriptContentsChecksum_NativeCall*)(0x0046f960);
+
+typedef uint32_t* __cdecl CSymbolTableEntryResolve_NativeCall(uint32_t checksum);
+CSymbolTableEntryResolve_NativeCall* CSymbolTableEntryResolve_Native = (CSymbolTableEntryResolve_NativeCall*)(0x00478CF0);
+
+void __declspec(naked) wrapper(uint32_t checksum) {
+
+	static uint32_t ret_addr = 0x00478D50;
+	__asm {
+		mov ecx, dword ptr ss : [esp + 0x4]
+		mov eax, ecx
+		push esi
+		mov esi, dword ptr ds : [0x006F3624]
+		and eax, 0xFFF
+		mov eax, dword ptr ds : [esi + eax * 4]
+		test eax, eax
+		je label_1
+		lea esp, dword ptr ss : [esp]
+	label_0 :
+		cmp dword ptr ds : [eax + 4] , ecx
+		je label_1
+		mov eax, dword ptr ds : [eax + 0x10]
+		test eax, eax
+		jne label_0
+	label_1 :
+		test eax, eax
+		mov edx, eax
+		je label_end
+		cmp byte ptr ds : [eax + 0x1] , 0xD
+		jne label_end
+		jmp label_2
+		lea ebx, ds : [ebx]
+	label_2:
+		mov ecx, dword ptr ds : [edx + 0xC]
+		mov eax, ecx
+		and eax, 0xFFF
+		mov eax, dword ptr ds : [esi + eax * 4]
+		test eax, eax
+		je label_end2
+	label_3 :
+		cmp dword ptr ds : [eax + 0x4] , ecx
+		je label_end3
+		mov eax, dword ptr ds : [eax + 0x10]
+		test eax, eax
+		jne label_3
+	label_end2 :
+		mov eax, edx
+	label_end :
+		cmp ecx, 0x1CA80417
+		je label_rem
+	label_end4 :
+		pop esi
+		jmp ret_addr
+	label_end3:
+		test eax, eax
+		je label_end2
+		cmp byte ptr ds : [eax + 0x1] , 0xD
+		jne label_end
+		mov edx, eax
+		jmp label_2
+	label_rem :
+		mov dword ptr [eax], 0x0
+		jmp label_end4
+	}
 }
 
 void initPatch() {
@@ -67,9 +151,13 @@ void initPatch() {
 
 	printf("Patch Initialized\n");
 
+	//TEST
+	//uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
+	//printf("Checksum:  0x%08x\n", checksum);
 
 	//No Intro Movies
-	patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
+	if (!getIniBool("Miscellaneous", "IntroMovies", 1, configFile)) 
+		patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
 
 	//Blur Fix
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
@@ -79,6 +167,7 @@ void initPatch() {
 	{
 		patchNop((void*)0x00526A36, 8); //Lock camera fix
 		patchNop((void*)ADDR_AirDrift, 8);
+		patchJump((void*)0x00478CF0, wrapper);
 	}
 
 	//Spin delay
@@ -135,6 +224,9 @@ void initPatch() {
 	//Increase qb Memory
 	patchByte((void*)(0x005BBCBE + 4), 0x10);
 	patchByte((void*)(0x005BBCD9 + 4), 0x10);
+
+	//Stability fix
+	patchBytesM((void*)0x004DB357, (BYTE*)"\xC7\x05\xAC\x6C\x78\x00\x00\x00\x7A\x47", 10);
 
 
 }

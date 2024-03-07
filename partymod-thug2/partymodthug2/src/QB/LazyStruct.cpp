@@ -260,14 +260,12 @@ namespace Script {
 	// Get array item
 	//---------------------------------------
 
-	//~ THAWPlus::LazyArray *LazyStruct::GetArray(uint32_t qbKey)
 	void* LazyStruct::GetArray(uint32_t qbKey)
 	{
 		LazyStructItem* item = GetItem(qbKey);
 		if (!item)
 			return nullptr;
 
-		//~ return (THAWPlus::LazyArray*) item -> value;
 		return (void*)item->value;
 	}
 
