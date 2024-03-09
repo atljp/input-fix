@@ -26,6 +26,7 @@
     <ClCompile Include="src\patch.cpp" />
     <ClCompile Include="src\QB\LazyStruct.cpp" />
     <ClCompile Include="src\QB\QB.cpp" />
+    <ClCompile Include="src\QB\script.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\config.h" />
@@ -37,6 +38,7 @@
     <ClInclude Include="src\QB\LazyStruct.h" />
     <ClInclude Include="src\QB\malloc.h" />
     <ClInclude Include="src\QB\QB.h" />
+    <ClInclude Include="src\QB\script.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -129,6 +131,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

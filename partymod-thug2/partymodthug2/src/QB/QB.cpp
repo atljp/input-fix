@@ -28,5 +28,6 @@ RunScriptR_NativeCall* RunScriptR_Native = (RunScriptR_NativeCall*)(0x00413200);
 
 void RunScriptWithReturn(uint32_t name, Script::LazyStruct* params, void* object, Script::LazyStruct* params_out)
 {
-    RunScriptR_Native(name, params, object, params_out);
+	RunScriptR_Native(name, params, object, params_out);
 }
+
