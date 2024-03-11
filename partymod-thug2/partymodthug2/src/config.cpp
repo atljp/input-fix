@@ -93,12 +93,7 @@ void patchResolution()
 	patchCall((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
 	patchByte((void*)ADDR_FUNC_ScreenAngleFactor, 0xE9);
 
-	//Fix mainmenu - assembly version
-	if (((float)resX / (float)resY > 1.34f)) {
-		patchJump((void*)0x004AD240, &fix_bg_plane); //Extra code before ScriptCreateScreenElement
-		//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
-	}
-
+	//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
 }
 
 
@@ -256,7 +251,9 @@ void loadSettings()
 	borderless = getIniBool("Graphics", "Borderless", 0, configFile);
 }
 
-
+float getaspectratio() {
+	return ((float)resX / (float)resY);
+}
 
 
 void loadInputSettings(struct inputsettings* settingsOut) {
@@ -392,33 +389,6 @@ void patch_button_font(uint8_t sel)
 		patchCall((void*)0x004CFF0C, &patch_button_lookup);
 	}
 	//For any other value default PC buttons are displayed
-}
-
-void __declspec(naked) fix_bg_plane()
-{
-	static uint32_t ret_addr = 0x004AD247;
-	static uint32_t unk_477B80 = 0x477B80;
-
-	if (!(*(uint8_t*)0x0069BAA8)) //Check for level select menu. Still breaks some menus, like "Enter Name" in classic or CAP
-	{
-		__asm {
-			mov eax, 0xFFFFFEE7
-			push eax
-			push 0xED7C6031
-			call unk_477B80
-			push 0xFFFFFFFF
-			push 0x63A298
-			jmp ret_addr
-		}
-	}
-	else
-	{
-		__asm {
-			push 0xFFFFFFFF
-			push 0x63A298
-			jmp ret_addr
-		}
-	}
 }
 
 void __declspec(naked) patch_button_lookup()

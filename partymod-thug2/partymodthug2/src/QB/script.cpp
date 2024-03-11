@@ -1,4 +1,5 @@
 #include "script.h"
+#include "config.h"
 
 struct DummyScript
 {
@@ -38,7 +39,7 @@ const uint8_t enter_kb_chat_new[] = {
 	0x00, 0x00, 0x01, 0x24
 };
 
-typedef void __cdecl CreateScreenElement_NativeCall(void* pParams, DummyScript* pScript);
+typedef void __cdecl CreateScreenElement_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 CreateScreenElement_NativeCall* CreateScreenElement_Native = (CreateScreenElement_NativeCall*)(0x004AD240);
 
 typedef uint32_t __cdecl GenerateCRCFromString_NativeCall(char* pName);
@@ -56,10 +57,6 @@ sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbo
 typedef uint32_t* __cdecl CSymbolTableEntryResolve_NativeCall(uint32_t checksum);
 CSymbolTableEntryResolve_NativeCall* CSymbolTableEntryResolve_Native = (CSymbolTableEntryResolve_NativeCall*)(0x00478CF0);
 
-typedef void* __fastcall unk1(uint32_t value, void* edx, uint32_t* idk, uint32_t* idk2);
-unk1* unk1_Native = (unk1*)(0x00476950);
-
-
 void __cdecl ParseQbWrapper(char* filename, uint8_t* script, int assertDuplicateSymbols) {
 
 }
@@ -67,21 +64,53 @@ void __cdecl ParseQbWrapper(char* filename, uint8_t* script, int assertDuplicate
 int a = 0;
 int b = 1004;
 
+typedef void __fastcall AddIntegerCall(Script::LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
+AddIntegerCall* AddInteger = (AddIntegerCall*)(0x00477B80); //Thug2 address
+
+void Script::LazyStruct::SetIntItem(uint32_t qbKey, int32_t value)
+{
+	AddInteger(this, 0, qbKey, value);
+}
+
+typedef bool __fastcall GetChecksum_NativeCall(uint32_t unk1, uint32_t* unk2, uint32_t unk4);
+GetChecksum_NativeCall* GetChecksum_Native = (GetChecksum_NativeCall*)(0x00476950);
+//bool CStruct::GetChecksum(uint32 nameChecksum, uint32 *p_checksum, EAssertType assert)
+//char __thiscall FUN_00476950(int param_1_00,int param_1,undefined4 *param_2,int param_3)
+
+
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986
-void ScriptCreateScreenElementWrapper(void* pParams, DummyScript* pScript)
+void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* pScript)
 {
 	DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
+
+	static uint32_t ret_addr	= 0x004AD247;
+	static uint32_t unk_477B80	= 0x00477B80;
+	static uint32_t unk_476950 = 0x00476950;
 
 	//level: load_mainmenu
 	if (unkElem->level == 0xe92ecafe)
 		// script: make_mainmenu_3d_plane
 		if (pScript->script_name == 0x7C92D11A) {
-			//bg_plane
-			uint32_t addr = *(uint32_t*)(0x0019F978);
-			if (*(uint32_t*)(addr - 0x158) == (0xBC4B9584) && true && true)
-			{
-				a = b + 23;
+			if (getaspectratio() > 1.34f) {
+				__asm {
+					push 0x0
+					lea eax, ss: [ebp - 0x34]
+					push eax
+					push 0x40C698AF
+					call unk_476950
+					cmp dword ptr ss : [ebp - 0x34] , 0xBC4B9584
+					jne label_mainmenu
+					mov eax, 0xFFFFFEE7
+					push eax
+					push 0xED7C6031
+					call unk_477B80
+				label_mainmenu:
+					//SETUP MAINMENU
+				}
 			}
+
+
+			
 		}
 
 
@@ -89,9 +118,17 @@ void ScriptCreateScreenElementWrapper(void* pParams, DummyScript* pScript)
 	//Actually calling CreateScreenElement with the received parameters
 	CreateScreenElement_Native(pParams, pScript);
 
-	//return 1;
+	/*
+	//bg_plane
+			if (pParams->GetInteger(0xBC4B9584) && true)
+			{
+				a = b + 23;
+				pParams->SetIntItem(0xc9b0deb7, 0xFFFFFEE7);
+				// call something(0xFFFFFEE7, 0xED7C6031); 
+			}
 	printf("initialize object: 0x%08x\n", pScript->script_name);
 	printf("%d\n", a);
+	*/
 }
 
 void patchScripts() {

@@ -161,13 +161,7 @@ namespace Script {
 	// Contains a flag?
 	bool LazyStruct::ContainsFlag(uint32_t qbKey) { return ContainsFlag_Native(this, qbKey); }
 
-	typedef void __fastcall AddIntegerCall(LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
-	AddIntegerCall* AddInteger = (AddIntegerCall*)(0x00477B80); //Thug2 address
 
-	void LazyStruct::SetIntItem(uint32_t qbKey, int32_t value)
-	{
-		AddInteger(this, 0, qbKey, value);
-	}
 
 	typedef void __fastcall AddFloatCall(LazyStruct* struc, int edx, uint32_t qbKey, float value);
 	AddFloatCall* AddFloat = (AddFloatCall*)(0x00477C60); //Thug2 address

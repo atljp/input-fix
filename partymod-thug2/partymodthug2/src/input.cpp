@@ -508,11 +508,11 @@ void pollKeyboard(device* dev) {
 
 	// Menu = ESC
 	if (keyboardState[0x29] && buffer == 0) {
-		if (menu_on_screen()) {
+		//if (menu_on_screen()) {
 			dev->controlData[3] |= 0x01 << 5;
-		} else {
+		//} else {
 			dev->controlData[2] |= 0x01 << 3;
-		}
+		//}
 		buffer = 20;
 	}
 
