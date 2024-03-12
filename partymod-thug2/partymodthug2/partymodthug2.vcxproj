@@ -39,6 +39,7 @@
     <ClInclude Include="src\QB\malloc.h" />
     <ClInclude Include="src\QB\QB.h" />
     <ClInclude Include="src\QB\script.h" />
+    <ClInclude Include="src\QB\scriptcontent.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

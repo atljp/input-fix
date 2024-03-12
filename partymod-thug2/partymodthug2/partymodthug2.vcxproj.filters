@@ -71,5 +71,8 @@
     <ClInclude Include="src\QB\script.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\QB\scriptcontent.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
