@@ -1,4 +1,5 @@
 #include <config.h>
+#include <QB/LazyStruct.h>
 
 #define GRAPHICS_SECTION "Graphics"
 #define KEYBIND_SECTION "Keybinds"
@@ -86,12 +87,9 @@ void patchResolution()
 	patchNop((void*)ADDR_ResFromReg_A, 5);					//Disable launcher setting X
 	patchNop((void*)ADDR_ResFromReg_B, 6);					//Disable launcher setting Y
 	*/
-	patchCall((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
-	patchByte((void*)ADDR_FUNC_AspectRatio, 0xE9);
 
-
-	patchCall((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
-	patchByte((void*)ADDR_FUNC_ScreenAngleFactor, 0xE9);
+	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
+	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
 
 	//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
 }
@@ -104,9 +102,9 @@ void createSDLWindow()
 
 	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
 
-	if (isWindowed && borderless)
+	if (isWindowed && borderless) {
 		flags |= SDL_WINDOW_BORDERLESS;
-
+	}
 	enforceMaxResolution();
 
 	if (resX == 0 || resY == 0) {
@@ -125,6 +123,7 @@ void createSDLWindow()
 
 	dumpSettings();
 	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
+	SDL_SetWindowResizable(window, SDL_TRUE);
 
 	if (!window)
 		printf("Failed to create window! Error: %s\n", SDL_GetError());

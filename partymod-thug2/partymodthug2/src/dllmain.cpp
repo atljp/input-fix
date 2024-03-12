@@ -31,6 +31,7 @@ int Rnd_fixed(int n)
 void initPatch() {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
+
 	// find last slash
 	char* exe = strrchr((LPSTR)executableDirectory, '\\');
 	if (exe) {

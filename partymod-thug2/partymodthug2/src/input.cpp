@@ -23,7 +23,7 @@ uint8_t menu_on_screen();
 void CheckChatHotkey();
 bool TextInputInNetGame();
 
-
+uint32_t checksum;
 void __cdecl set_actuators(int port, uint16_t hight, uint16_t low);
 
 
@@ -456,6 +456,8 @@ void taunt(uint8_t tauntkey) {
 	}
 }
 
+
+
 void pollKeyboard(device* dev) {
 
 	dev->isValid = 1;
@@ -463,7 +465,7 @@ void pollKeyboard(device* dev) {
 
 	uint8_t* keyboardState = (uint8_t*)SDL_GetKeyboardState(NULL);
 
-	if (buffer > 0)
+	if (buffer > 0)	
 		buffer--;
 
 	if (tauntbuffer > 0)
@@ -1062,7 +1064,6 @@ uint8_t convert_SDL_to_OIS_keycode(uint8_t sdlKeyCode) {
 
 void __stdcall initManager() {
 	printf("Initializing Manager!\n");
-
 
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory3, MAX_PATH);
 
