@@ -55,7 +55,7 @@ namespace Script
 		bool Contains(uint32_t qbKey);
 		bool ContainsFlag(uint32_t qbKey);
 
-		void SetFloatItem(uint32_t qbKey, float value);
+		void AddFloat(uint32_t nameChecksum, float float_val);
 		void SetChecksumItem(uint32_t qbKey, uint32_t value);
 		void SetStringItem(uint32_t qbKey, char* value);
 		void SetStructItem(uint32_t qbKey, LazyStruct* value); // Sets item that already exists!

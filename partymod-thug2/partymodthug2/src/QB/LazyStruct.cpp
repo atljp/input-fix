@@ -163,15 +163,6 @@ namespace Script {
 	bool LazyStruct::ContainsFlag(uint32_t qbKey) { return ContainsFlag_Native(this, qbKey); }
 
 
-
-	typedef void __fastcall AddFloatCall(LazyStruct* struc, int edx, uint32_t qbKey, float value);
-	AddFloatCall* AddFloat = (AddFloatCall*)(0x00477C60); //Thug2 address
-
-	void LazyStruct::SetFloatItem(uint32_t qbKey, float value)
-	{
-		AddFloat(this, 0, qbKey, value);
-	}
-
 	typedef void __fastcall AddChecksumCall(LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
 	AddChecksumCall* AddChecksum = (AddChecksumCall*)(0x00477D40); //Thug2 address
 
@@ -261,6 +252,19 @@ namespace Script {
 	{
 		AddInteger_Native(this, checksum, value);
 	}
+
+	//---------------------------------------
+	// Add float
+	//---------------------------------------
+
+	typedef void (__thiscall* AddFloat_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, float float_val);
+	AddFloat_NativeCall AddFloat_Native = (AddFloat_NativeCall)(0x00477C60); //Thug2 address
+
+	void LazyStruct::AddFloat(uint32_t nameChecksum, float float_val)
+	{
+		AddFloat_Native(this, nameChecksum, float_val);
+	}
+
 
 	//---------------------------------------
 	// Get array item

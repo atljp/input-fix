@@ -128,12 +128,30 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 {
     DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
+	uint32_t p_checksum2 = 0;
 
 	if (unkElem->level == 0xE92ECAFE)  // level: load_mainmenu
 		if (pScript->script_name == 0x7C92D11A) {  // script: make_mainmenu_3d_plane
 			pParams->GetChecksum(0x40C698AF, &p_checksum, false);  // result holds CRC value for bg_plane
-			if (p_checksum == 0xBC4b9584 && getaspectratio() > 1.34f)
+			if (p_checksum == 0xBC4B9584 && getaspectratio() > 1.34f)
 				pParams->AddInteger(0xED7C6031, 0xFFFFFEE7); // cameraz with increased value
+		}
+		else if (pScript->script_name == 0xAD62B0B3) { // script: build_roundbar
+
+			//This will be interesting
+
+			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); // type
+			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); // id
+			
+			if (p_checksum == 0x5B9DA842 /* containerelement */ && p_checksum2 == 0x1954867E /* roundbar_bar */) {
+			
+				pParams->AddFloat(0x13B9DA7B , 0.8); // scale 
+				printf("here\n");
+			
+			}
+
+			
+		
 		}
 
 	//Actually calling CreateScreenElement with the received parameters
