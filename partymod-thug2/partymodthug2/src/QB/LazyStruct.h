@@ -67,6 +67,8 @@ namespace Script
 		float GetFloat(uint32_t qbKey);
 		bool GetChecksum(uint32_t checksum, uint32_t* p_checksum, bool assert);
 		void AddInteger(uint32_t checksum, uint32_t value);
+		void AddPair(uint32_t nameChecksum, float x, float y);
+
 		void* GetArray(uint32_t qbKey);
 		char* GetString(uint32_t qbKey);
 		LazyStruct* GetStruct(uint32_t qbKey);

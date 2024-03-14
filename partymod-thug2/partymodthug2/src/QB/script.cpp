@@ -129,32 +129,38 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
     DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
 	uint32_t p_checksum2 = 0;
+	//Float values are processed according to the IEEE-754 specification
 
-	if (unkElem->level == 0xE92ECAFE)  // level: load_mainmenu
-		if (pScript->script_name == 0x7C92D11A) {  // script: make_mainmenu_3d_plane
-			pParams->GetChecksum(0x40C698AF, &p_checksum, false);  // result holds CRC value for bg_plane
+	if (unkElem->level == 0xE92ECAFE)  /* level: load_mainmenu */
+		if (pScript->script_name == 0x7C92D11A) {  /* script: make_mainmenu_3d_plane */
+
+			pParams->GetChecksum(0x40C698AF, &p_checksum, false);  /* bg_plane */
+
 			if (p_checksum == 0xBC4B9584 && getaspectratio() > 1.34f)
-				pParams->AddInteger(0xED7C6031, 0xFFFFFEE7); // cameraz with increased value
+				pParams->AddInteger(0xED7C6031, 0xFFFFFEE7); /* cameraz */
 		}
-		else if (pScript->script_name == 0xAD62B0B3) { // script: build_roundbar
+		else if (pScript->script_name == 0xAD62B0B3) { /* script: build_roundbar */
 
-			//This will be interesting
-
-			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); // type
-			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); // id
+			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); /* type */
+			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
 			
 			if (p_checksum == 0x5B9DA842 /* containerelement */ && p_checksum2 == 0x1954867E /* roundbar_bar */) {
-			
-				pParams->AddFloat(0x13B9DA7B , 0.8); // scale 
-				printf("here\n");
-			
+				pParams->AddFloat(0x13B9DA7B , 0.8); /* scale  */
+				pParams->AddPair(0x7F261953, 155.0f, 213.0f); /* pos */
 			}
+		}
+		else if (pScript->script_name = 0x59F6E121) { /* script: make_spin_menu */
 
-			
-		
+			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); /* type */
+			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
+
+			if (p_checksum == 0x130EF802 /* vmenu */ && p_checksum2 == 0xB0524B44 /* main_vmenu */) {
+				pParams->AddPair(0x7F261953, 116.0f, 214.0f); /* pos */
+				pParams->AddFloat(0x13B9DA7B, 0.72f); /* scale */	
+			}
 		}
 
-	//Actually calling CreateScreenElement with the received parameters
+	//Call CreateScreenElement with the received parameters
 	CreateScreenElement_Native(pParams, pScript);
 }
 
@@ -179,6 +185,7 @@ void patchScripts() {
 	//uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
 	//printf("Checksum:  0x%08x\n", checksum);
 	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper);
+	printf("Initialize CreateScreenElement wrapper\n");
 
 	//Load script maybe
 	//uint32_t* dummyresult = sCreateScriptSymbol_Native(0x3b4548b8, checksum, (const char)"scripts\\game\\game.qb");

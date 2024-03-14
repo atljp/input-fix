@@ -11,6 +11,7 @@
 - Selectable languages (English, French, German)
 - Selectable button fonts (Keyboard, PS2, XBOX, or NGC)
 - Stability fixes (e.g., for level merging)
+- Fixed RNG
 - THUG Airdrift
 
 ## TODO
@@ -19,7 +20,7 @@
 - Adjustable Drop down key(s)
 - Change GameSpy to OpenSpy
 - Separate menu controls
-- Text inside the main menu wheel is not adjusted for the widescreen aspect ratios
+- Text inside the main menu wheel is not adjusted for 16:10
 
 ## Visual Studio Project
 

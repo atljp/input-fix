@@ -234,7 +234,7 @@ namespace Script {
 	//---------------------------------------
 
 	typedef bool(__thiscall* GetChecksum_NativeCall)(LazyStruct* struc, uint32_t checksum, uint32_t *p_checksum, bool assert);
-	GetChecksum_NativeCall GetChecksum_Native = (GetChecksum_NativeCall)0x00476950;
+	GetChecksum_NativeCall GetChecksum_Native = (GetChecksum_NativeCall)(0x00476950);
 
 	bool LazyStruct::GetChecksum(uint32_t checksum, uint32_t *p_checksum, bool assert)
 	{
@@ -263,6 +263,18 @@ namespace Script {
 	void LazyStruct::AddFloat(uint32_t nameChecksum, float float_val)
 	{
 		AddFloat_Native(this, nameChecksum, float_val);
+	}
+
+	//---------------------------------------
+	// Add vector
+	//---------------------------------------
+	
+	typedef void(__thiscall* AddPair_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, float x, float y);
+	AddPair_NativeCall AddPair_Native = (AddPair_NativeCall)(0x00477FC0); //Thug2 address
+
+	void LazyStruct::AddPair(uint32_t nameChecksum, float x, float y)
+	{
+		AddPair_Native(this, nameChecksum, x, y);
 	}
 
 
