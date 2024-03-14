@@ -19,7 +19,6 @@ uint8_t* fog = (uint8_t*)(0x007D6436);
 HWND* hwnd = (HWND*)0x007D6A28;
 
 uint8_t resbuffer[100000];	// buffer needed for high resolutions
-
 uint8_t borderless;
 
 typedef struct {
@@ -196,6 +195,8 @@ void writeConfigValues()
 	patchNop((void*)0x004B2DC4, 5);
 	patchNop((void*)0x004B3405, 5);
 
+	
+
 }
 
 
@@ -248,6 +249,8 @@ void loadSettings()
 	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
 	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
 	borderless = getIniBool("Graphics", "Borderless", 0, configFile);
+
+
 }
 
 float getaspectratio() {

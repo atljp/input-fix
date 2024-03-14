@@ -2,6 +2,7 @@
 #include "malloc.h"
 
 
+
 namespace Script {
 
 	// --------------------------------------------
@@ -146,8 +147,8 @@ namespace Script {
 		return found_item;
 	}
 
-	typedef bool __fastcall Contains_NativeCall(LazyStruct* struc, uint32_t item_name);
-	Contains_NativeCall* Contains_Native = (Contains_NativeCall*)(0x00476AF0); //Thug2 address
+	typedef bool (__thiscall* Contains_NativeCall)(LazyStruct* struc, uint32_t item_name);
+	Contains_NativeCall Contains_Native = (Contains_NativeCall)(0x00476AF0); //Thug2 address
 
 	// See if we contain a valueless checksum
 	bool LazyStruct::Contains(uint32_t qbKey)
@@ -155,8 +156,8 @@ namespace Script {
 		return Contains_Native(this, qbKey) || ContainsFlag(qbKey);
 	}
 
-	typedef bool __fastcall ContainsFlag_NativeCall(LazyStruct* struc, uint32_t flag);
-	ContainsFlag_NativeCall* ContainsFlag_Native = (ContainsFlag_NativeCall*)(0x00476B40); //Thug2 address
+	typedef bool (__thiscall* ContainsFlag_NativeCall)(LazyStruct* struc, uint32_t flag);
+	ContainsFlag_NativeCall ContainsFlag_Native = (ContainsFlag_NativeCall)(0x00476B40); //Thug2 address
 
 	// Contains a flag?
 	bool LazyStruct::ContainsFlag(uint32_t qbKey) { return ContainsFlag_Native(this, qbKey); }
@@ -241,13 +242,24 @@ namespace Script {
 	// Get checksum item
 	//---------------------------------------
 
-	uint32_t LazyStruct::GetChecksum(uint32_t qbKey)
-	{
-		LazyStructItem* item = GetItem(qbKey);
-		if (!item)
-			return 0;
+	typedef bool(__thiscall* GetChecksum_NativeCall)(LazyStruct* struc, uint32_t checksum, uint32_t *p_checksum, bool assert);
+	GetChecksum_NativeCall GetChecksum_Native = (GetChecksum_NativeCall)0x00476950;
 
-		return (uint32_t)item->value;
+	bool LazyStruct::GetChecksum(uint32_t checksum, uint32_t *p_checksum, bool assert)
+	{
+		return GetChecksum_Native(this, checksum, p_checksum, assert);
+	}
+
+	//---------------------------------------
+	// Set integer
+	//---------------------------------------
+
+	typedef void (__thiscall* AddInteger_NativeCall)(LazyStruct* struc, uint32_t checksum, uint32_t value);
+	AddInteger_NativeCall AddInteger_Native = (AddInteger_NativeCall)(0x00477B80); //Thug2 address
+
+	void LazyStruct::AddInteger(uint32_t checksum, uint32_t value)
+	{
+		AddInteger_Native(this, checksum, value);
 	}
 
 	//---------------------------------------

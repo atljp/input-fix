@@ -55,7 +55,6 @@ namespace Script
 		bool Contains(uint32_t qbKey);
 		bool ContainsFlag(uint32_t qbKey);
 
-		void SetIntItem(uint32_t qbKey, int32_t value);
 		void SetFloatItem(uint32_t qbKey, float value);
 		void SetChecksumItem(uint32_t qbKey, uint32_t value);
 		void SetStringItem(uint32_t qbKey, char* value);
@@ -66,7 +65,8 @@ namespace Script
 
 		int GetInteger(uint32_t qbKey);
 		float GetFloat(uint32_t qbKey);
-		uint32_t GetChecksum(uint32_t qbKey);
+		bool GetChecksum(uint32_t checksum, uint32_t* p_checksum, bool assert);
+		void AddInteger(uint32_t checksum, uint32_t value);
 		void* GetArray(uint32_t qbKey);
 		char* GetString(uint32_t qbKey);
 		LazyStruct* GetStruct(uint32_t qbKey);
