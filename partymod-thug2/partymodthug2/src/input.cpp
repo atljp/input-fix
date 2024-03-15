@@ -456,8 +456,6 @@ void taunt(uint8_t tauntkey) {
 	}
 }
 
-
-
 void pollKeyboard(device* dev) {
 
 	dev->isValid = 1;

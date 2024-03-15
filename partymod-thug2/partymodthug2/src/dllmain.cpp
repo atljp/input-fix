@@ -17,10 +17,9 @@
 #include <QB/script.h>
 
 #define VERSION_NUMBER_MAJOR 0
-#define VERSION_NUMBER_MINOR 1
+#define VERSION_NUMBER_MINOR 2
 
 char* executableDirectory[MAX_PATH];
-void CScriptSymbolTableEntry_asm(uint32_t checksum);
 BOOL dpi_result = SetProcessDPIAware(); //Prevent DPI scaling
 
 int Rnd_fixed(int n)
@@ -69,7 +68,6 @@ void initPatch() {
 	{
 		patchNop((void*)0x00526A36, 8); //Lock camera fix
 		patchNop((void*)ADDR_AirDrift, 8);
-		patchJump((void*)0x00478CF0, CScriptSymbolTableEntry_asm);
 	}
 
 	//Spin delay
@@ -158,67 +156,6 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 		break;
 	}
 	return TRUE;
-}
-
-void __declspec(naked) CScriptSymbolTableEntry_asm(uint32_t checksum) {
-
-	static uint32_t ret_addr = 0x00478D50;
-	__asm {
-		mov ecx, dword ptr ss : [esp + 0x4]
-		mov eax, ecx
-		push esi
-		mov esi, dword ptr ds : [0x006F3624]
-		and eax, 0xFFF
-		mov eax, dword ptr ds : [esi + eax * 4]
-		test eax, eax
-		je label_1
-		lea esp, dword ptr ss : [esp]
-		label_0 :
-		cmp dword ptr ds : [eax + 4] , ecx
-		je label_1
-		mov eax, dword ptr ds : [eax + 0x10]
-		test eax, eax
-		jne label_0
-		label_1 :
-		test eax, eax
-			mov edx, eax
-			je label_end
-			cmp byte ptr ds : [eax + 0x1] , 0xD
-			jne label_end
-			jmp label_2
-			lea ebx, ds : [ebx]
-			label_2 :
-			mov ecx, dword ptr ds : [edx + 0xC]
-			mov eax, ecx
-			and eax, 0xFFF
-			mov eax, dword ptr ds : [esi + eax * 4]
-			test eax, eax
-			je label_end2
-			label_3 :
-		cmp dword ptr ds : [eax + 0x4] , ecx
-			je label_end3
-			mov eax, dword ptr ds : [eax + 0x10]
-			test eax, eax
-			jne label_3
-			label_end2 :
-		mov eax, edx
-			label_end :
-		cmp ecx, 0x1CA80417
-			je label_rem
-			label_end4 :
-		pop esi
-			jmp ret_addr
-			label_end3 :
-		test eax, eax
-			je label_end2
-			cmp byte ptr ds : [eax + 0x1] , 0xD
-			jne label_end
-			mov edx, eax
-			jmp label_2
-			label_rem :
-		mov dword ptr[eax], 0x0
-			jmp label_end4
-	}
 }
 
 /*

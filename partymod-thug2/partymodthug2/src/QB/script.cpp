@@ -5,13 +5,7 @@
 struct DummyScript
 {
 	char unk[200];
-	uint32_t script_name;
-};
-
-struct DummyCScriptStructure
-{
-	char unk[888];
-	uint32_t checksum;
+	uint32_t mScriptNameChecksum;
 };
 
 struct DummyUnkElem
@@ -22,10 +16,14 @@ struct DummyUnkElem
 
 bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 {
-	if (pScript->script_name == 0x6AEC78DA)
+	if (pScript->mScriptNameChecksum == 0x6AEC78DA)
 		return true;
 	return false;
 }
+
+/// <summary>
+/// Scripty stuff
+/// </summary>
 
 typedef void* sCreateScriptSymbol_NativeCall(uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName);
 sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall*)(0x0046FE40); //0x00479110
@@ -45,7 +43,34 @@ AddChecksumName_NativeCall* CleanUpAndRemoveSymbol_Native = (AddChecksumName_Nat
 typedef uint32_t* __cdecl CSymbolTableEntryResolve_NativeCall(uint32_t checksum);
 CSymbolTableEntryResolve_NativeCall* CSymbolTableEntryResolve_Native = (CSymbolTableEntryResolve_NativeCall*)(0x00478CF0);
 
-void __cdecl ParseQbWrapper(char* filename, uint8_t* script, int assertDuplicateSymbols) {
+
+typedef void* __cdecl LookUpSymbol_NativeCall(uint32_t checksum);
+LookUpSymbol_NativeCall* LookUpSymbol_Native = (LookUpSymbol_NativeCall*)(0x00478CF0);
+
+bool walkspinpatched = false;
+void LookUpSymbol_Patched(uint32_t checksum) {
+		if (checksum == 0x1CA80417 && !walkspinpatched) {
+			patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
+			walkspinpatched = true;
+		}	
+	LookUpSymbol_Native(checksum);
+}
+
+
+
+typedef uint32_t* __fastcall first_unkNativeCall(uint32_t param1);
+first_unkNativeCall* first_unkNative = (first_unkNativeCall*)(0x00478CC0);
+
+typedef void __fastcall second_unkNativeCall(uint32_t* param1);
+second_unkNativeCall* second_unkNative = (second_unkNativeCall*)(0x004711D0);
+
+
+void __fastcall first_unk(uint32_t param1) {
+	uint32_t* a;
+	a = first_unkNative(param1);
+	if (a)
+		second_unkNative(a);
+
 
 }
 
@@ -56,6 +81,9 @@ int b = 1004;
 
 void __declspec(naked) loadcustomqb()
 {
+	first_unk(0x3B4548B8); // enter_kb_chat
+
+	/*
 	static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
 	static uint32_t* addr_scrname = (uint32_t*)&scriptname;
 
@@ -84,18 +112,10 @@ void __declspec(naked) loadcustomqb()
 		pop ebp
 		ret
 	}
-
+	*/
 	//void* dummyresult = sCreateScriptSymbol_Native(0x3B4548B8, checksum, (const char*)scriptname);
+	//uint32_t* dummyresult = sCreateScriptSymbol_Native(0x3b4548b8, checksum, (const char)"scripts\\game\\game.qb");
 }
-
-typedef bool __fastcall GetChecksum_NativeCall(uint32_t unk1, uint32_t* unk2, uint32_t unk4);
-
-
-
-GetChecksum_NativeCall* GetChecksum_Native = (GetChecksum_NativeCall*)(0x00476950);
-//bool CStruct::GetChecksum(uint32 nameChecksum, uint32 *p_checksum, EAssertType assert)
-//char __thiscall FUN_00476950(int param_1_00,int param_1,undefined4 *param_2,int param_3)
-
 
 void __declspec(naked) loadqb() {
 
@@ -131,41 +151,48 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 	uint32_t p_checksum2 = 0;
 	//Float values are processed according to the IEEE-754 specification
 
-	if (unkElem->level == 0xE92ECAFE)  /* level: load_mainmenu */
-		if (pScript->script_name == 0x7C92D11A) {  /* script: make_mainmenu_3d_plane */
+	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
+
+		if (pScript->mScriptNameChecksum == 0x7C92D11A) {  /* script: make_mainmenu_3d_plane */
 
 			pParams->GetChecksum(0x40C698AF, &p_checksum, false);  /* bg_plane */
 
 			if (p_checksum == 0xBC4B9584 && getaspectratio() > 1.34f)
 				pParams->AddInteger(0xED7C6031, 0xFFFFFEE7); /* cameraz */
 		}
-		else if (pScript->script_name == 0xAD62B0B3) { /* script: build_roundbar */
+		else if (pScript->mScriptNameChecksum == 0xAD62B0B3) { /* script: build_roundbar */
 
 			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); /* type */
 			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
-			
+
 			if (p_checksum == 0x5B9DA842 /* containerelement */ && p_checksum2 == 0x1954867E /* roundbar_bar */) {
-				pParams->AddFloat(0x13B9DA7B , 0.8); /* scale  */
-				pParams->AddPair(0x7F261953, 155.0f, 213.0f); /* pos */
+				pParams->AddFloat(0x13B9DA7B, 0.8f); /* scale */
+				pParams->AddPair(0x7F261953, 157.0f, 213.0f); /* pos */
 			}
 		}
-		else if (pScript->script_name = 0x59F6E121) { /* script: make_spin_menu */
+		else if (pScript->mScriptNameChecksum = 0x59F6E121) { /* script: make_spin_menu */
 
 			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); /* type */
 			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
 
 			if (p_checksum == 0x130EF802 /* vmenu */ && p_checksum2 == 0xB0524B44 /* main_vmenu */) {
 				pParams->AddPair(0x7F261953, 116.0f, 214.0f); /* pos */
-				pParams->AddFloat(0x13B9DA7B, 0.72f); /* scale */	
+				pParams->AddFloat(0x13B9DA7B, 0.72f); /* scale */
 			}
 		}
+	}
 
 	//Call CreateScreenElement with the received parameters
 	CreateScreenElement_Native(pParams, pScript);
 }
 
 void patchScripts() {
+
 	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched);
+	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper);
+
+	printf("Initializing CFuncs\n");
+
 
 	//TEST
 	uint32_t bb = 0xDEADBEEF;
@@ -173,22 +200,12 @@ void patchScripts() {
 
 	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
 	printf("Checksum: 0x%08x\n", checksum);
+	//printf("Checksum: 0x%08x\n", (uint32_t*)&game_new);
 
-	printf("Checksum: 0x%08x\n", (uint32_t*)&game_new);
-
-	//patchJump((void*)0x005A5B32, loadcustomqb); //__thiscall issue??
-
+	//patchJump((void*)0x005A5B32, loadcustomqb); //__thiscall issue?? hook into loading process
 	//patchJump((void*)0x00472445, loadqb); //patch function that loads whole qb files and replace certain files with ours
 
-
-
-	//uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
-	//printf("Checksum:  0x%08x\n", checksum);
-	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper);
-	printf("Initialize CreateScreenElement wrapper\n");
-
-	//Load script maybe
-	//uint32_t* dummyresult = sCreateScriptSymbol_Native(0x3b4548b8, checksum, (const char)"scripts\\game\\game.qb");
+	patchCall((void*)0x00474F25, LookUpSymbol_Patched);
 
 	/*
 	THUG2 ParseQB: 0x00472420
