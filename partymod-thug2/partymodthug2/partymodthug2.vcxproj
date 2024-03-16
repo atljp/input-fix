@@ -22,7 +22,6 @@
     <ClCompile Include="src\config.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
     <ClCompile Include="src\input.cpp" />
-    <ClCompile Include="src\Log\Logger.cpp" />
     <ClCompile Include="src\patch.cpp" />
     <ClCompile Include="src\QB\LazyStruct.cpp" />
     <ClCompile Include="src\QB\QB.cpp" />

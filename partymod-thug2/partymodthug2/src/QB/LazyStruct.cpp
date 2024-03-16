@@ -233,7 +233,7 @@ namespace Script {
 	// Get checksum item
 	//---------------------------------------
 
-	typedef bool(__thiscall* GetChecksum_NativeCall)(LazyStruct* struc, uint32_t checksum, uint32_t *p_checksum, bool assert);
+	typedef bool (__thiscall* GetChecksum_NativeCall)(LazyStruct* struc, uint32_t checksum, uint32_t *p_checksum, bool assert);
 	GetChecksum_NativeCall GetChecksum_Native = (GetChecksum_NativeCall)(0x00476950);
 
 	bool LazyStruct::GetChecksum(uint32_t checksum, uint32_t *p_checksum, bool assert)

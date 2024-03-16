@@ -30,9 +30,6 @@
     <ClCompile Include="src\QB\LazyStruct.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="src\Log\Logger.cpp">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="src\QB\QB.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
