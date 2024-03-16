@@ -194,9 +194,6 @@ void writeConfigValues()
 	patchNop((void*)0x0048C330, 5);
 	patchNop((void*)0x004B2DC4, 5);
 	patchNop((void*)0x004B3405, 5);
-
-	
-
 }
 
 

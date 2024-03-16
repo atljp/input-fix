@@ -48,11 +48,17 @@ typedef void* __cdecl LookUpSymbol_NativeCall(uint32_t checksum);
 LookUpSymbol_NativeCall* LookUpSymbol_Native = (LookUpSymbol_NativeCall*)(0x00478CF0);
 
 bool walkspinpatched = false;
+bool boardscuffpatched = false;
 void LookUpSymbol_Patched(uint32_t checksum) {
 		if (checksum == 0x1CA80417 && !walkspinpatched) {
 			patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
 			walkspinpatched = true;
-		}	
+		}
+		else if (checksum == 0x9CE4DA4F && !boardscuffpatched) {
+			patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
+			boardscuffpatched = true;
+		}
+	
 	LookUpSymbol_Native(checksum);
 }
 

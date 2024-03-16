@@ -101,7 +101,8 @@ void initPatch() {
 	//Spin delay
 	if (!getIniBool("Gameplay", "SpinDelay", 1, configFile))
 	{
-		patchBytesM((void*)ADDR_SpinDelay, (BYTE*)"\x6A\x00\x90\x90\x90", 5);
+		patchNop((void*)ADDR_SpinLagL, 2);
+		patchNop((void*)ADDR_SpinLagR, 2);
 	}
 
 	//Change strings: gamespy to openspy

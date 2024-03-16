@@ -550,10 +550,12 @@ void pollKeyboard(device* dev) {
 
 	//Switch/Revert +  Right Spin
 	if (keyboardState[keybinds.rightSpin]) {
-		dev->controlData[3] |= 0x01 << 3;
-		dev->controlData[17] = 0xff;
+		/* revert */
 		dev->controlData[3] |= 0x01 << 1;
 		dev->controlData[19] = 0xff;
+		/* right spin */
+		dev->controlData[3] |= 0x01 << 3;
+		dev->controlData[17] = 0xff;
 	}
 	// Nollie + Left Spin
 	if (keyboardState[keybinds.leftSpin]) {
