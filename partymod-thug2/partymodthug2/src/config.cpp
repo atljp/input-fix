@@ -24,6 +24,9 @@ HWND* hwnd = (HWND*)0x007D6A28;
 uint8_t resbuffer[100000];	// buffer needed for high resolutions
 uint8_t isBorderless;
 
+int defWidth;
+int defHeight;
+
 uint8_t console;
 uint8_t language;
 uint8_t buttonfont;
@@ -52,21 +55,20 @@ void dumpSettings() {
 }
 
 void enforceMaxResolution() {
-	DEVMODE deviceMode;
-	int i = 0;
+
+	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */
+	defHeight = GetSystemMetrics(SM_CYSCREEN);	/* The height of the screen of the primary display monitor, in pixels.  */
+
+	//printf("defWidth: %d\n", defWidth);
+	//printf("defHeight: %d\n", defHeight);
+
 	uint8_t isValidX = 0;
 	uint8_t isValidY = 0;
 
-	while (EnumDisplaySettings(NULL, i, &deviceMode)) {
-		if (deviceMode.dmPelsWidth >= resX) {
+	if (defWidth >= resX)
 			isValidX = 1;
-		}
-		if (deviceMode.dmPelsHeight >= resY) {
+	if (defHeight >= resY)
 			isValidY = 1;
-		}
-
-		i++;
-	}
 
 	if (!isValidX || !isValidY) {
 		resX = 0;
@@ -84,22 +86,6 @@ float __cdecl getScreenAngleFactor() {
 	return ((float)resX / (float)resY) / (4.0f / 3.0f);
 }
 
-
-void patchResolution()
-{
-	/*
-	patchDWord((void*)ADDR_ResolutionX, resX);				//Ingame X
-	patchDWord((void*)ADDR_ResolutionY, resY);				//Ingame Y
-	patchNop((void*)ADDR_ResFromReg_A, 5);					//Disable launcher setting X
-	patchNop((void*)ADDR_ResFromReg_B, 6);					//Disable launcher setting Y
-	*/
-
-	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
-	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
-
-	//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
-}
-
 int Rnd_fixed(int n)
 {
 	return (rand() % n);
@@ -109,29 +95,26 @@ int Rnd_fixed(int n)
 void createSDLWindow()
 {
 	SDL_Init(SDL_INIT_VIDEO);
-
 	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
 
 	if (isWindowed && isBorderless) {
 		flags |= SDL_WINDOW_BORDERLESS;
 	}
+
 	enforceMaxResolution();
-
 	if (resX == 0 || resY == 0) {
-		SDL_DisplayMode displayMode;
-		SDL_GetDesktopDisplayMode(0, &displayMode);
-		resX = displayMode.w;
-		resY = displayMode.h;
+		resX = defWidth;
+		resY = defHeight;
 	}
 
-	if (resX < 640) {
+	if (resX < 640 || resY < 480) {
 		resX = 640;
-	}
-	if (resY < 480) {
 		resY = 480;
 	}
 
-	dumpSettings();
+	printf("Setting resolution: %d x %d\n", resX, resY);
+	printf("Aspect ratio:%f\n", getaspectratio());
+
 	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
 	SDL_SetWindowResizable(window, SDL_TRUE);
 
@@ -165,8 +148,9 @@ void createSDLWindow()
 	patchDWord((void*)ADDR_WindowResoltionX, resX);
 	patchDWord((void*)ADDR_WindowResoltionY, resY);
 
-	//patch resolution of the game
-	patchResolution();
+	//Set aspect ratio and FOV
+	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
+	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
 }
 
 
@@ -210,17 +194,6 @@ void patchWindow() {
 
 	//Don't load launcher settings from registry, use our own ini values instead
 	patchCall((void*)0x005F4591, writeConfigValues);
-}
-
-
-int getIniBool(const char* section, const char* key, int def, char* file) {
-	int result = GetPrivateProfileInt(section, key, def, file);
-	if (result) {
-		return 1;
-	}
-	else {
-		return 0;
-	}
 }
 
 
@@ -410,7 +383,6 @@ void patchStaticValues() {
 	patchCall((void*)0x004523F6, &Rnd_fixed);
 }
 
-/* getter functions */
 float getaspectratio() {
 	return ((float)resX / (float)resY);
 }
@@ -420,6 +392,16 @@ void getconfig(struct scriptsettings* scriptsettingsOut)
 {
 	if (scriptsettingsOut) {
 		scriptsettingsOut->airdrift = airdrift;
+	}
+}
+
+int getIniBool(const char* section, const char* key, int def, char* file) {
+	int result = GetPrivateProfileInt(section, key, def, file);
+	if (result) {
+		return 1;
+	}
+	else {
+		return 0;
 	}
 }
 
