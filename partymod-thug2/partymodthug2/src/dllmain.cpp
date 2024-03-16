@@ -56,6 +56,34 @@ void initPatch() {
 	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
 	printf("Patch Initialized\n");
 
+	//Improve startup time
+	patchByte((void*)0x00450016, 0x74);
+	patchByte((void*)0x0045002C, 0x74);
+	patchByte((void*)0x00452F77, 0x75);
+	patchByte((void*)0x0052F70F, 0xEB);
+	patchByte((void*)(0x0052F7DF + 1), 0x00);
+	patchByte((void*)0x0053654F, 0xEB);
+	patchDWord((void*)(0x00564E64 + 1), 0x000001FF);
+	patchByte((void*)0x005F3391, 0x13);
+	patchByte((void*)(0x005F5EC5 + 1), 0xC7);
+	patchNop((void*)(0x005F5EC5 + 2), 4);
+	patchNop((void*)0x005F5EDC, 6);
+	patchByte((void*)(0x005F5F09 + 1), 0xD7);
+	patchNop((void*)(0x005F5F09 + 2), 4);
+	patchNop((void*)(0x005F5F1D), 6);
+	patchByte((void*)(0x005F5F4D + 1), 0xCF);
+	patchNop((void*)(0x005F5F4D + 2), 4);
+	patchNop((void*)0x005F5F61, 6);
+	patchByte((void*)(0x005F5F91 + 1), 0xC7);
+	patchNop((void*)(0x005F5F91 + 2), 4);
+	patchNop((void*)0x005F5FA5, 6);
+	patchDWord((void*)(0x005F88F7 + 2), 0x000001F4);
+	patchByte((void*)(0x005F8AD6 + 6), 0x6F);
+	patchByte((void*)(0x005F8ADD + 6), 0x70);
+	patchByte((void*)(0x005F8AE4 + 6), 0x65);
+	patchByte((void*)(0x005F8AEB + 6), 0x6E);
+	patchDWord((void*)(0x005FBAF4 + 1), 0x00001388);
+
 	//No Intro Movies
 	if (!getIniBool("Miscellaneous", "IntroMovies", 1, configFile)) 
 		patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);

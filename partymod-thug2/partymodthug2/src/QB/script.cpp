@@ -210,7 +210,7 @@ void patchScripts() {
 	printf("0x%08x\n", bb);
 
 
-	patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
+	//patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
 
 
 
