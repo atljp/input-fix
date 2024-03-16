@@ -124,7 +124,9 @@ void loadControllerBinds(struct controllerbinds* bindsOut);
 void loadKeyBinds(struct keybinds* bindsOut);
 int getIniBool(const char* section, const char* key, int def, char* file);
 
-void dumpSettings();
+int Rnd_fixed(int n);
+void setAspectRatio(float aspect);
+float getScreenAngleFactor();
 void patchWindow();
 void patch_button_font(uint8_t sel);
 void patch_button_lookup();

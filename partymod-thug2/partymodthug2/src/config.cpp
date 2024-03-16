@@ -48,12 +48,6 @@ float aspect_ratio;
 graphicsSettings graphics_settings;
 SDL_Window* window;
 
-
-void dumpSettings() {
-	printf("RESOLUTION X: %d\n", resX);
-	printf("RESOLUTION Y: %d\n", resY);
-}
-
 void enforceMaxResolution() {
 
 	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */
@@ -66,31 +60,15 @@ void enforceMaxResolution() {
 	uint8_t isValidY = 0;
 
 	if (defWidth >= resX)
-			isValidX = 1;
+		isValidX = 1;
 	if (defHeight >= resY)
-			isValidY = 1;
+		isValidY = 1;
 
 	if (!isValidX || !isValidY) {
 		resX = 0;
 		resY = 0;
 	}
 }
-
-
-float* screenAspectRatio = (float*)0x00701340;
-void __cdecl setAspectRatio(float aspect) {
-	*screenAspectRatio = (float)resX / (float)resY;
-}
-
-float __cdecl getScreenAngleFactor() {
-	return ((float)resX / (float)resY) / (4.0f / 3.0f);
-}
-
-int Rnd_fixed(int n)
-{
-	return (rand() % n);
-}
-
 
 void createSDLWindow()
 {
@@ -115,7 +93,7 @@ void createSDLWindow()
 	printf("Setting resolution: %d x %d\n", resX, resY);
 	printf("Aspect ratio:%f\n", getaspectratio());
 
-	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: fullscreen
+	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: move / resize borderless window
 	SDL_SetWindowResizable(window, SDL_TRUE);
 
 	if (!window)
@@ -129,8 +107,6 @@ void createSDLWindow()
 	*hwnd = wmInfo.info.win.window;
 
 	*(int*)ADDR_IsFocused = 1;
-	//*(int*)ADDR_OtherIsFocused = 1;
-	//*(int*)ADDR_AnotherIsFocused = 1;
 
 	//DirectX9: D3DPRESENTPARAMS
 	if (isWindowed)
@@ -142,7 +118,6 @@ void createSDLWindow()
 	{
 		SDL_ShowCursor(0);
 	}
-
 
 	// patch resolution of the window
 	patchDWord((void*)ADDR_WindowResoltionX, resX);
@@ -383,6 +358,15 @@ void patchStaticValues() {
 	patchCall((void*)0x004523F6, &Rnd_fixed);
 }
 
+float* screenAspectRatio = (float*)0x00701340;
+void __cdecl setAspectRatio(float aspect) {
+	*screenAspectRatio = (float)resX / (float)resY;
+}
+
+float __cdecl getScreenAngleFactor() {
+	return ((float)resX / (float)resY) / (4.0f / 3.0f);
+}
+
 float getaspectratio() {
 	return ((float)resX / (float)resY);
 }
@@ -405,7 +389,78 @@ int getIniBool(const char* section, const char* key, int def, char* file) {
 	}
 }
 
+int Rnd_fixed(int n)
+{
+	return (rand() % n);
+}
 
+
+typedef uint32_t ButtonLookup_NativeCall(char* button);
+ButtonLookup_NativeCall* ButtonLookup_Native = (ButtonLookup_NativeCall*)(0x004020E0);
+
+uint32_t patchButtonLookup(char* p_button) {
+
+	uint8_t value = *p_button;
+
+	if ((0x30 < value) && (value < 0x39)) {
+		return (value - 0x30);
+	}
+	else if ((value > 0x41) && (value < 0x56)) {
+		return (value - 0x37);
+	}
+	else if ((value > 0x61) && (value < 0x76)) {
+		return (value - 0x57);
+	}
+	else { 
+		return 0;
+	}
+		
+
+
+	
+	//return ButtonLookup_Native(button);
+	
+	//return 4;
+
+	/*
+	* \b4 = Select
+
+	* 
+	Ps2: 
+	0x00 = Triangle
+	0x01 = Square
+	0x02 = Circle
+	0x03 = X
+
+	PC:
+	0x04 = Arrow Down
+	*/
+}
+
+void patch_button_font(uint8_t sel)
+{
+
+	/* 1 = PC (default), 3 = Xbox. Both have the same text: Xbox.buttons_font*/
+
+	if (sel == 2)
+		patchDWord((void*)0x00648B03, 0x00327350); // Ps2..buttons_font
+	else if (sel == 4)
+		patchDWord((void*)0x00648B03, 0x0063674E); //Ngc..buttons_font
+
+
+	if (1 < sel && sel < 5)
+	{
+		patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
+		patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
+		patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40); //Font lookup
+		patchCall((void*)0x004CFF0C, &patch_button_lookup);
+	}
+}
+
+
+
+
+/* provide info about ps2 layout for input.cpp */
 void loadInputSettings(struct inputsettings* settingsOut) {
 
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
@@ -423,7 +478,7 @@ void loadInputSettings(struct inputsettings* settingsOut) {
 		settingsOut->isPs2Controls = getIniBool("Miscellaneous", "UsePS2Controls", 1, configFile);
 }
 
-
+/* Keyboard binds */
 void loadKeyBinds(struct keybinds* bindsOut)
 {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
@@ -470,7 +525,7 @@ void loadKeyBinds(struct keybinds* bindsOut)
 	}
 }
 
-
+/* Gamepad binds */
 void loadControllerBinds(struct controllerbinds* bindsOut)
 {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
@@ -511,36 +566,6 @@ void loadControllerBinds(struct controllerbinds* bindsOut)
 		bindsOut->movement = (controllerStick)GetPrivateProfileInt(CONTROLLER_SECTION, "MovementStick", CONTROLLER_STICK_LEFT, configFile);
 		bindsOut->camera = (controllerStick)GetPrivateProfileInt(CONTROLLER_SECTION, "CameraStick", CONTROLLER_STICK_RIGHT, configFile);
 	}
-}
-
-void patch_button_font(uint8_t sel)
-{
-	switch (sel)
-	{
-
-	/* case 1 is PC default */
-
-	case 2:
-		patchBytesM((void*)0x00648B03, (BYTE*)"\x50\x73\x32\x00\x00", 5); //ButtonsPs2
-		break;
-	case 3:
-		patchBytesM((void*)0x00648B03, (BYTE*)"\x58\x62\x6F\x78\x00", 5); //ButtonsXBox
-		break;
-	case 4:
-		patchBytesM((void*)0x00648B03, (BYTE*)"\x4E\x67\x63\x00\x00", 5); //ButtonsNgc
-	default:
-		break;
-
-	}
-
-	if (1 < sel && sel < 5)
-	{
-		patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
-		patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
-		patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40); //Font lookup
-		patchCall((void*)0x004CFF0C, &patch_button_lookup);
-	}
-	//For any other value default PC buttons are displayed
 }
 
 void __declspec(naked) patch_button_lookup()
