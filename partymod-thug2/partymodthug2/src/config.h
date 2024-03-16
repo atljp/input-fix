@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <patch.h>
 #include <input.h>
@@ -112,8 +113,11 @@ struct inputsettings {
 };
 
 struct scriptsettings {
-	int walkspin;
+	int airdrift;
 };
+
+void initPatch();
+void patchStaticValues();
 
 void loadInputSettings(struct inputsettings* settingsOut);
 void loadControllerBinds(struct controllerbinds* bindsOut);

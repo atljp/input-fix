@@ -5,7 +5,10 @@
 #define KEYBIND_SECTION "Keybinds"
 #define CONTROLLER_SECTION "Gamepad"
 
-char* executableDirectory2[MAX_PATH];
+#define VERSION_NUMBER_MAJOR 0
+#define VERSION_NUMBER_MINOR 3
+
+char* executableDirectory[MAX_PATH];
 
 
 uint8_t isWindowed = 0;
@@ -20,6 +23,14 @@ HWND* hwnd = (HWND*)0x007D6A28;
 
 uint8_t resbuffer[100000];	// buffer needed for high resolutions
 uint8_t borderless;
+
+uint8_t walkspin;
+uint8_t console;
+uint8_t language;
+uint8_t buttonfont;
+uint8_t intromovies;
+int airdrift; /* this has to be int for some reason */
+uint8_t spindelay;
 
 typedef struct {
 	uint32_t antialiasing;
@@ -36,13 +47,11 @@ graphicsSettings graphics_settings;
 SDL_Window* window;
 
 void loadSettings();
-void fix_bg_plane();
 
 void dumpSettings() {
 	printf("RESOLUTION X: %d\n", resX);
 	printf("RESOLUTION Y: %d\n", resY);
 }
-
 
 void enforceMaxResolution() {
 	DEVMODE deviceMode;
@@ -93,10 +102,14 @@ void patchResolution()
 	//patchBytesM((void*)0x00648800, (BYTE*)"\x7E\x3A\x1E\x3C", 4); //Fix FOV
 }
 
+int Rnd_fixed(int n)
+{
+	return (rand() % n);
+}
+
 
 void createSDLWindow()
 {
-	loadSettings();
 	SDL_Init(SDL_INIT_VIDEO);
 
 	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
@@ -146,7 +159,7 @@ void createSDLWindow()
 	}
 	else
 	{
-		SDL_ShowCursor(1);
+		SDL_ShowCursor(0);
 	}
 
 
@@ -199,6 +212,7 @@ void writeConfigValues()
 
 void patchWindow() {
 	// replace the window with an SDL2 window.  this kind of straddles the line between input and config
+	loadSettings();
 	patchCall((void*)ADDR_FUNC_CreateWindow, &createSDLWindow);
 	patchByte((void*)(ADDR_FUNC_CreateWindow + 5), 0xC3);
 	patchDWord((void*)ADDR_Resbuffer, (uint32_t)&resbuffer);
@@ -221,20 +235,184 @@ int getIniBool(const char* section, const char* key, int def, char* file) {
 }
 
 
-void loadSettings()
-{
-	printf("Loading settings\n");
+void initPatch() {
 
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
+	/* First, patch static values into the exe */
+	patchStaticValues();
 
-	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory2, '\\');
+
+	/* Get INI path */
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
+
+	
+	char* exe = strrchr((LPSTR)executableDirectory, '\\'); // find last slash
 	if (exe) {
 		*(exe + 1) = '\0';
 	}
 
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
+	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
+
+
+	/* Read INI config values*/
+	console = getIniBool("Miscellaneous", "Console", 0, configFile);
+	language = GetPrivateProfileInt("Miscellaneous", "Language", 1, configFile);
+	buttonfont = GetPrivateProfileInt("Miscellaneous", "ButtonFont", 0, configFile);
+	intromovies = getIniBool("Miscellaneous", "IntroMovies", 1, configFile);
+	airdrift = getIniBool("Gameplay", "THUGAirDrift", 0, configFile);
+	spindelay = getIniBool("Gameplay", "SpinDelay", 1, configFile);
+
+
+	/* Allocate console */
+	if (console) {
+		AllocConsole();
+
+		FILE* fDummy;
+		freopen_s(&fDummy, "CONIN$", "r", stdin);
+		freopen_s(&fDummy, "CONOUT$", "w", stderr);
+		freopen_s(&fDummy, "CONOUT$", "w", stdout);
+	}
+	printf("PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
+	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
+	printf("Patch initialized\n");
+	printf("Initializing INI settings:\n");
+	printf("---------------------------------------------------------\n");
+
+
+	/* Set language */
+	patchNop((void*)ADDR_FUNC_LangFromReg, 5);		//Don't get the value from registry
+
+	if (language == 1)
+		patchByte((void*)ADDR_LanguageFlag, 1);		//English
+	else if (language == 2)
+		patchByte((void*)ADDR_LanguageFlag, 3);		//French
+	else if (language == 3)
+		patchByte((void*)ADDR_LanguageFlag, 5);		//German
+	else
+		patchByte((void*)ADDR_LanguageFlag, 1);
+
+	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Load and savegames from multiple language settings
+	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
+	printf("Loading language setting: %s\n", (language == 1) ? "English" : ((language == 2) ? "French" : ((language == 3) ? "German" : "English")));
+
+
+	/* Set button font */
+	patch_button_font(buttonfont);
+	if (buttonfont > 1)
+		printf("Loading button font: %s\n", (buttonfont == 2) ? "Ps2" : ((buttonfont == 3) ? "Xbox" : ((buttonfont == 4) ? "NGC" : "PC")));
+	else
+		printf("Loading button font: PC\n");
+
+
+	/* Toggle intro movies */
+	if (!intromovies)
+		patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
+	printf("Intro movies: %s\n", intromovies ? "Enabled" : "Disabled");
+
+
+	/* Set THUG airdrift */
+	if (airdrift)
+	{
+		patchNop((void*)0x00526A36, 8); //Lock camera fix
+		patchNop((void*)ADDR_AirDrift, 8);
+		/* Walkspin is disabled in script.cpp */
+	}
+	printf("Airdrift: %s\n", airdrift ? "Enabled" : "Disabled");
+
+
+	/* Set spindelay. Off is Ps2 default, on is PC default (value = 100) */
+	if (!spindelay)
+	{
+		patchNop((void*)ADDR_SpinLagL, 2);
+		patchNop((void*)ADDR_SpinLagR, 2);
+	}
+	printf("Spindelay: %s\n", spindelay ? "Enabled (PC default)" : "Disabled (Ps2 default)");
+
+
+
+	printf("---------------------------------------------------------\n");
+	printf("Finished initializing INI settings!\n");
+}
+
+void patchStaticValues() {
+
+	/* Increase startup speed */
+	patchByte((void*)0x0045002C, 0x74);
+	patchByte((void*)0x00452F77, 0x75);
+	patchByte((void*)0x0052F70F, 0xEB);
+	patchByte((void*)(0x0052F7DF + 1), 0x00);
+	patchByte((void*)0x0053654F, 0xEB);
+	patchDWord((void*)(0x00564E64 + 1), 0x000001FF);
+	patchByte((void*)0x005F3391, 0x13);
+	patchByte((void*)(0x005F5EC5 + 1), 0xC7);
+	patchNop((void*)(0x005F5EC5 + 2), 4);
+	patchNop((void*)0x005F5EDC, 6);
+	patchByte((void*)(0x005F5F09 + 1), 0xD7);
+	patchNop((void*)(0x005F5F09 + 2), 4);
+	patchNop((void*)(0x005F5F1D), 6);
+	patchByte((void*)(0x005F5F4D + 1), 0xCF);
+	patchNop((void*)(0x005F5F4D + 2), 4);
+	patchNop((void*)0x005F5F61, 6);
+	patchByte((void*)(0x005F5F91 + 1), 0xC7);
+	patchNop((void*)(0x005F5F91 + 2), 4);
+	patchNop((void*)0x005F5FA5, 6);
+	patchDWord((void*)(0x005F88F7 + 2), 0x000001F4);
+	patchByte((void*)(0x005F8AD6 + 6), 0x6F);
+	patchByte((void*)(0x005F8ADD + 6), 0x70);
+	patchByte((void*)(0x005F8AE4 + 6), 0x65);
+	patchByte((void*)(0x005F8AEB + 6), 0x6E);
+	patchDWord((void*)(0x005FBAF4 + 1), 0x00001388);
+
+	/* Stability fix */
+	patchBytesM((void*)0x004DB357, (BYTE*)"\xC7\x05\xAC\x6C\x78\x00\x00\x00\x7A\x47", 10);
+
+	/* Increase script memory region */
+	patchByte((void*)(0x005BBCBE + 4), 0x10);
+	patchByte((void*)(0x005BBCD9 + 4), 0x10);
+
+	/* Blur fix (necessary since Windows Vista) */
+	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
+
+	//Change strings: gamespy to openspy
+	patchBytesM((void*)0x0064CD97, (BYTE*)"\x74\x68\x6D\x6F\x64\x73\x2E\x63\x6F\x6D\x2F\x6D\x6F\x74\x64\x2E\x64\x61\x74\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 65);
+	patchBytesM((void*)0x0064D67A, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x0066729D, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x0066731A, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x006673BC, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x006673D0, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x0066776C, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x00667D61, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x00668014, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x0068E7E2, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x0068EA7D, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x0068EABD, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
+	patchBytesM((void*)0x00668074, (BYTE*)"\x54\x32\x43\x72\x61\x63\x6B\x45\x00\x00\x00\x00\x00\x00\x00\x00", 16);
+
+	//Connection refused fix
+	patchByte((void*)0x005F95BB, 0xEB);
+
+	//Patch fixed RNG
+	srand(static_cast<unsigned int>(time(0)));
+	patchCall((void*)0x004523A7, &Rnd_fixed);
+	patchCall((void*)0x004523B4, &Rnd_fixed);
+	patchCall((void*)0x004523F6, &Rnd_fixed);
+
+}
+
+void loadSettings()
+{
+	printf("Loading settings\n");
+
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
+
+	// find last slash
+	char* exe = strrchr((LPSTR)executableDirectory, '\\');
+	if (exe) {
+		*(exe + 1) = '\0';
+	}
+
+	char configFile[MAX_PATH];
+	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
 	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
 	graphics_settings.hq_shadows = getIniBool("Graphics", "HQShadows", 0, configFile);
@@ -246,9 +424,7 @@ void loadSettings()
 	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
 	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
 	borderless = getIniBool("Graphics", "Borderless", 0, configFile);
-
-	
-
+	walkspin = getIniBool("Extended", "Walkspin", 1, configFile);
 
 }
 
@@ -256,54 +432,45 @@ float getaspectratio() {
 	return ((float)resX / (float)resY);
 }
 
+/* called from patchScripts */
 void getconfig(struct scriptsettings* scriptsettingsOut)
 {
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
-
-	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory2, '\\');
-	if (exe) {
-		*(exe + 1) = '\0';
+	if (scriptsettingsOut) {
+		scriptsettingsOut->airdrift = airdrift;
 	}
-
-	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
-
-	scriptsettingsOut->walkspin = getIniBool("Extended", "Walkspin", 1, configFile);
 }
 
 
 void loadInputSettings(struct inputsettings* settingsOut) {
 
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
 	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory2, '\\');
+	char* exe = strrchr((LPSTR)executableDirectory, '\\');
 	if (exe) {
 		*(exe + 1) = '\0';
 	}
 
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
+	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
-	if (settingsOut) {
+	if (settingsOut)
 		settingsOut->isPs2Controls = getIniBool("Miscellaneous", "UsePS2Controls", 1, configFile);
-	}
 }
 
 
 void loadKeyBinds(struct keybinds* bindsOut)
 {
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
 	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory2, '\\');
+	char* exe = strrchr((LPSTR)executableDirectory, '\\');
 	if (exe) {
 		*(exe + 1) = '\0';
 	}
 
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
+	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
 	if (bindsOut) {
 		//bindsOut->menu = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Pause", SDL_SCANCODE_RETURN, configFile);
@@ -341,16 +508,16 @@ void loadKeyBinds(struct keybinds* bindsOut)
 
 void loadControllerBinds(struct controllerbinds* bindsOut)
 {
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
 	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory2, '\\');
+	char* exe = strrchr((LPSTR)executableDirectory, '\\');
 	if (exe) {
 		*(exe + 1) = '\0';
 	}
 
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
+	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
 
 	if (bindsOut) {
@@ -385,20 +552,23 @@ void patch_button_font(uint8_t sel)
 {
 	switch (sel)
 	{
-	case 1:
+
+	/* case 1 is PC default */
+
+	case 2:
 		patchBytesM((void*)0x00648B03, (BYTE*)"\x50\x73\x32\x00\x00", 5); //ButtonsPs2
 		break;
-	case 2:
+	case 3:
 		patchBytesM((void*)0x00648B03, (BYTE*)"\x58\x62\x6F\x78\x00", 5); //ButtonsXBox
 		break;
-	case 3:
+	case 4:
 		patchBytesM((void*)0x00648B03, (BYTE*)"\x4E\x67\x63\x00\x00", 5); //ButtonsNgc
 	default:
 		break;
 
 	}
 
-	if (0 < sel && sel < 4)
+	if (1 < sel && sel < 5)
 	{
 		patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
 		patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
