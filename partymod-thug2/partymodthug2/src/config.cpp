@@ -247,11 +247,29 @@ void loadSettings()
 	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
 	borderless = getIniBool("Graphics", "Borderless", 0, configFile);
 
+	
+
 
 }
 
 float getaspectratio() {
 	return ((float)resX / (float)resY);
+}
+
+void getconfig(struct scriptsettings* scriptsettingsOut)
+{
+	GetModuleFileName(NULL, (LPSTR)&executableDirectory2, MAX_PATH);
+
+	// find last slash
+	char* exe = strrchr((LPSTR)executableDirectory2, '\\');
+	if (exe) {
+		*(exe + 1) = '\0';
+	}
+
+	char configFile[MAX_PATH];
+	sprintf(configFile, "%s%s", executableDirectory2, CONFIG_FILE_NAME);
+
+	scriptsettingsOut->walkspin = getIniBool("Extended", "Walkspin", 1, configFile);
 }
 
 

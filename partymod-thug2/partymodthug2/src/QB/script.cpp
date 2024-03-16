@@ -21,6 +21,8 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 	return false;
 }
 
+struct scriptsettings mScriptsettings;
+
 /// <summary>
 /// Scripty stuff
 /// </summary>
@@ -50,14 +52,15 @@ LookUpSymbol_NativeCall* LookUpSymbol_Native = (LookUpSymbol_NativeCall*)(0x0047
 bool walkspinpatched = false;
 bool boardscuffpatched = false;
 void LookUpSymbol_Patched(uint32_t checksum) {
-		if (checksum == 0x1CA80417 && !walkspinpatched) {
-			patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
-			walkspinpatched = true;
-		}
-		else if (checksum == 0x9CE4DA4F && !boardscuffpatched) {
-			patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
-			boardscuffpatched = true;
-		}
+
+	if (mScriptsettings.walkspin && checksum == 0x1CA80417 && !walkspinpatched) {
+		patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
+		walkspinpatched = true;
+	}
+	else if (checksum == 0x9CE4DA4F && !boardscuffpatched) {
+		patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
+		boardscuffpatched = true;
+	}
 	
 	LookUpSymbol_Native(checksum);
 }
@@ -203,6 +206,10 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 }
 
 void patchScripts() {
+
+
+	/* First, get config from INI. struct defined in config.h */
+	getconfig(&mScriptsettings);
 
 	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched); /* returns true for the neversoft test skater */
 	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper); /* adjusts scale and position of main menu screen elements in widescreen */

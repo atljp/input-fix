@@ -111,6 +111,10 @@ struct inputsettings {
 	uint8_t isPs2Controls;
 };
 
+struct scriptsettings {
+	int walkspin;
+};
+
 void loadInputSettings(struct inputsettings* settingsOut);
 void loadControllerBinds(struct controllerbinds* bindsOut);
 void loadKeyBinds(struct keybinds* bindsOut);
@@ -122,3 +126,4 @@ void patch_button_font(uint8_t sel);
 void patch_button_lookup();
 float getScreenAngleFactor();
 float getaspectratio();
+void getconfig(struct scriptsettings* scriptsettingsOut);
