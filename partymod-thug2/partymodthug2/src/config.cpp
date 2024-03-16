@@ -22,9 +22,8 @@ uint8_t* fog = (uint8_t*)(0x007D6436);
 HWND* hwnd = (HWND*)0x007D6A28;
 
 uint8_t resbuffer[100000];	// buffer needed for high resolutions
-uint8_t borderless;
+uint8_t isBorderless;
 
-uint8_t walkspin;
 uint8_t console;
 uint8_t language;
 uint8_t buttonfont;
@@ -34,9 +33,9 @@ uint8_t spindelay;
 
 typedef struct {
 	uint32_t antialiasing;
-	uint32_t hq_shadows;
-	uint32_t distance_clipping;
-	uint32_t clipping_distance;	// int from 1-100
+	uint32_t hqshadows;
+	uint32_t distanceclipping;
+	uint32_t clippingdistance;	// int from 1-100
 	uint32_t fog;
 } graphicsSettings;
 
@@ -46,7 +45,6 @@ float aspect_ratio;
 graphicsSettings graphics_settings;
 SDL_Window* window;
 
-void loadSettings();
 
 void dumpSettings() {
 	printf("RESOLUTION X: %d\n", resX);
@@ -114,7 +112,7 @@ void createSDLWindow()
 
 	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
 
-	if (isWindowed && borderless) {
+	if (isWindowed && isBorderless) {
 		flags |= SDL_WINDOW_BORDERLESS;
 	}
 	enforceMaxResolution();
@@ -175,17 +173,17 @@ void createSDLWindow()
 void writeConfigValues()
 {
 	uint32_t distance_real = 1;
-	uint32_t distance = graphics_settings.clipping_distance;
+	uint32_t distance = graphics_settings.clippingdistance;
 
 	*antialiasing = graphics_settings.antialiasing;
-	if (graphics_settings.hq_shadows)
+	if (graphics_settings.hqshadows)
 	{
 		printf("Setting HQ Shadows\n");
-		*hq_shadows = graphics_settings.hq_shadows;
+		*hq_shadows = graphics_settings.hqshadows;
 		patchByte((void*)(0x004A19E5 + 2), 0x04); //Very high shadow quality
 		patchByte((void*)(0x004A19EA + 2), 0x04);
 	}
-	*distance_clipping = graphics_settings.distance_clipping;
+	*distance_clipping = graphics_settings.distanceclipping;
 	*fog = graphics_settings.fog;
 
 	if (distance > 100)
@@ -200,19 +198,11 @@ void writeConfigValues()
 		*clipping_distance_2 = distance;
 	else
 		*clipping_distance_2 = distance_real;
-
-
-	//Patch further instructions for slight graphical improvements
-	patchNop((void*)0x0044F045, 8);
-	patchNop((void*)0x0048C330, 5);
-	patchNop((void*)0x004B2DC4, 5);
-	patchNop((void*)0x004B3405, 5);
 }
 
 
 void patchWindow() {
 	// replace the window with an SDL2 window.  this kind of straddles the line between input and config
-	loadSettings();
 	patchCall((void*)ADDR_FUNC_CreateWindow, &createSDLWindow);
 	patchByte((void*)(ADDR_FUNC_CreateWindow + 5), 0xC3);
 	patchDWord((void*)ADDR_Resbuffer, (uint32_t)&resbuffer);
@@ -220,7 +210,6 @@ void patchWindow() {
 
 	//Don't load launcher settings from registry, use our own ini values instead
 	patchCall((void*)0x005F4591, writeConfigValues);
-	//Fix displayed keyboard buttons
 }
 
 
@@ -243,13 +232,10 @@ void initPatch() {
 
 	/* Get INI path */
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
-
-	
 	char* exe = strrchr((LPSTR)executableDirectory, '\\'); // find last slash
 	if (exe) {
 		*(exe + 1) = '\0';
 	}
-
 	char configFile[MAX_PATH];
 	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
@@ -275,7 +261,7 @@ void initPatch() {
 	printf("PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
 	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
 	printf("Patch initialized\n");
-	printf("Initializing INI settings:\n");
+	printf("Initializing INI settings\n");
 	printf("---------------------------------------------------------\n");
 
 
@@ -329,9 +315,29 @@ void initPatch() {
 	printf("Spindelay: %s\n", spindelay ? "Enabled (PC default)" : "Disabled (Ps2 default)");
 
 
+	/* Graphic settings */
+	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
+	graphics_settings.hqshadows = getIniBool("Graphics", "HQShadows", 0, configFile);
+	graphics_settings.distanceclipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
+	graphics_settings.clippingdistance = GetPrivateProfileInt("Graphics", "ClippingDistance", 100, configFile);
+	graphics_settings.fog = getIniBool("Graphics", "Fog", 0, configFile);
+	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 640, configFile);
+	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
+	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
+	isBorderless = getIniBool("Graphics", "Borderless", 0, configFile);
+
+	printf("Graphic settings - Fullscreen Anti-Aliasing: %s\n", graphics_settings.antialiasing ? "Enabled" : "Disabled");
+	printf("Graphic settings - HQ Shadows: %s\n", graphics_settings.hqshadows ? "Enabled" : "Disabled");
+	printf("Graphic settings - Distance Clipping: %s\n", graphics_settings.distanceclipping ? "Enabled" : "Disabled");
+	if (graphics_settings.distanceclipping) {
+		printf("Graphic settings - Clipping Distance: %d\n", graphics_settings.clippingdistance);
+		printf("Graphic settings - Fog: %s\n", graphics_settings.fog ? "Enabled" : "Disabled");
+	}
+	printf("Graphic settings - Resolution from INI: %d x %d\n", resX, resY);
+	printf("Graphic settings - Window mode: %s \n", (isWindowed && !isBorderless) ? "Enabled (default)" : ((isWindowed && isBorderless) ? "Enabled (borderless)" : "Disabled"));
 
 	printf("---------------------------------------------------------\n");
-	printf("Finished initializing INI settings!\n");
+	printf("Finished initializing INI settings\n");
 }
 
 void patchStaticValues() {
@@ -373,6 +379,12 @@ void patchStaticValues() {
 	/* Blur fix (necessary since Windows Vista) */
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
 
+	/* Slight graphical improvements */
+	patchNop((void*)0x0044F045, 8);
+	patchNop((void*)0x0048C330, 5);
+	patchNop((void*)0x004B2DC4, 5);
+	patchNop((void*)0x004B3405, 5);
+
 	//Change strings: gamespy to openspy
 	patchBytesM((void*)0x0064CD97, (BYTE*)"\x74\x68\x6D\x6F\x64\x73\x2E\x63\x6F\x6D\x2F\x6D\x6F\x74\x64\x2E\x64\x61\x74\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 65);
 	patchBytesM((void*)0x0064D67A, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
@@ -396,38 +408,9 @@ void patchStaticValues() {
 	patchCall((void*)0x004523A7, &Rnd_fixed);
 	patchCall((void*)0x004523B4, &Rnd_fixed);
 	patchCall((void*)0x004523F6, &Rnd_fixed);
-
 }
 
-void loadSettings()
-{
-	printf("Loading settings\n");
-
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
-
-	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory, '\\');
-	if (exe) {
-		*(exe + 1) = '\0';
-	}
-
-	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
-
-	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
-	graphics_settings.hq_shadows = getIniBool("Graphics", "HQShadows", 0, configFile);
-	graphics_settings.distance_clipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
-	graphics_settings.clipping_distance = GetPrivateProfileInt("Graphics", "ClippingDistance", 100, configFile);
-	graphics_settings.fog = getIniBool("Graphics", "Fog", 0, configFile);
-
-	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 640, configFile);
-	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
-	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
-	borderless = getIniBool("Graphics", "Borderless", 0, configFile);
-	walkspin = getIniBool("Extended", "Walkspin", 1, configFile);
-
-}
-
+/* getter functions */
 float getaspectratio() {
 	return ((float)resX / (float)resY);
 }
