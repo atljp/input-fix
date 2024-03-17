@@ -299,7 +299,6 @@ void patchStaticValues() {
 
 	/* Increase startup speed */
 	patchByte((void*)0x0045002C, 0x74);
-	patchByte((void*)0x00452F77, 0x75);
 	patchByte((void*)0x0052F70F, 0xEB);
 	patchByte((void*)(0x0052F7DF + 1), 0x00);
 	patchByte((void*)0x0053654F, 0xEB);
