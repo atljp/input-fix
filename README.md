@@ -1,5 +1,9 @@
 # input-fix
 
+<br>![image](./partymod-thug2/placeholder_banner.png)
+
+> Make sure we're using the script heap, cos we're about to create a bunch of scripty stuff.
+
 ## Features
 
 - Unofficial port of [partymod-thaw](https://github.com/PARTYMANX/partymod-thaw)
