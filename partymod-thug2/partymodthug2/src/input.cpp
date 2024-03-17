@@ -26,6 +26,10 @@ bool TextInputInNetGame();
 uint32_t checksum;
 void __cdecl set_actuators(int port, uint16_t hight, uint16_t low);
 
+SDL_Locale* locale = SDL_GetPreferredLocales();
+HKL lang = ::GetKeyboardLayout(0);
+LANGID language = PRIMARYLANGID(lang);
+
 
 char* executableDirectory3[MAX_PATH];
 typedef struct {
@@ -654,10 +658,15 @@ void do_key_input(SDL_KeyCode key) {
 		return;
 	}
 
+	/* Language: 7 = GER, 9 = US */
+	/* Update keyboard layout setting */
+	language = PRIMARYLANGID(lang);
+
 	int32_t key_out = 0;
 	uint8_t modstate = SDL_GetModState();
 	uint8_t shift = SDL_GetModState() & KMOD_SHIFT;
 	uint8_t caps = SDL_GetModState() & KMOD_CAPS;
+	uint8_t altgr = SDL_GetModState() & KMOD_RALT;
 
 	if (key == SDLK_RETURN) {
 		key_out = 0x0d;	// CR
@@ -680,177 +689,189 @@ void do_key_input(SDL_KeyCode key) {
 			key_out -= 0x20;
 		}
 	}
-	else if (key == SDLK_PERIOD) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '>';
+	else if (language == 9) { /* US */
+		if (key == SDLK_PERIOD) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '>';
+			}
+			else {
+				key_out = '.';
+			}
 		}
-		else {
-			key_out = '.';
+		else if (key == SDLK_COMMA) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '<';
+			}
+			else {
+				key_out = ',';
+			}
 		}
-	}
-	else if (key == SDLK_COMMA) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '<';
+		else if (key == SDLK_SLASH) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '?';
+			}
+			else {
+				key_out = '/';
+			}
 		}
-		else {
-			key_out = ',';
+		else if (key == SDLK_SEMICOLON) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = ':';
+			}
+			else {
+				key_out = ';';
+			}
 		}
-	}
-	else if (key == SDLK_SLASH) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '?';
+		else if (key == SDLK_QUOTE) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '\"';
+			}
+			else {
+				key_out = '\'';
+			}
 		}
-		else {
-			key_out = '/';
+		else if (key == SDLK_LEFTBRACKET) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '{';
+			}
+			else {
+				key_out = '[';
+			}
 		}
-	}
-	else if (key == SDLK_SEMICOLON) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = ':';
+		else if (key == SDLK_RIGHTBRACKET) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '}';
+			}
+			else {
+				key_out = ']';
+			}
 		}
-		else {
-			key_out = ';';
+		else if (key == SDLK_BACKSLASH) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '|';
+			}
+			else {
+				key_out = '\\';
+			}
 		}
-	}
-	else if (key == SDLK_QUOTE) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '\"';
+		else if (key == SDLK_MINUS) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '_';
+			}
+			else {
+				key_out = '-';
+			}
 		}
-		else {
-			key_out = '\'';
+		else if (key == SDLK_EQUALS) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '+';
+			}
+			else {
+				key_out = '=';
+			}
 		}
-	}
-	else if (key == SDLK_LEFTBRACKET) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '{';
+		else if (key == SDLK_BACKQUOTE) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = '~';
+			}
+			else {
+				key_out = '`';
+			}
 		}
-		else {
-			key_out = '[';
+		else if (key == SDLK_1 && modstate & KMOD_SHIFT) {
+			key_out = '!';
 		}
-	}
-	else if (key == SDLK_RIGHTBRACKET) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '}';
+		else if (key == SDLK_2 && modstate & KMOD_SHIFT) {
+			key_out = '@';
 		}
-		else {
-			key_out = ']';
+		else if (key == SDLK_3 && modstate & KMOD_SHIFT) {
+			key_out = '#';
 		}
-	}
-	else if (key == SDLK_BACKSLASH) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '|';
+		else if (key == SDLK_4 && modstate & KMOD_SHIFT) {
+			key_out = '$';
 		}
-		else {
-			key_out = '\\';
+		else if (key == SDLK_5 && modstate & KMOD_SHIFT) {
+			key_out = '%';
 		}
-	}
-	else if (key == SDLK_MINUS) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '_';
+		else if (key == SDLK_6 && modstate & KMOD_SHIFT) {
+			key_out = '^';
 		}
-		else {
+		else if (key == SDLK_7 && modstate & KMOD_SHIFT) {
+			key_out = '&';
+		}
+		else if (key == SDLK_8 && modstate & KMOD_SHIFT) {
+			key_out = '*';
+		}
+		else if (key == SDLK_9 && modstate & KMOD_SHIFT) {
+			key_out = '(';
+		}
+		else if (key == SDLK_0 && modstate & KMOD_SHIFT) {
+			key_out = ')';
+		}
+		else if (key == SDLK_KP_0) {
+			key_out = '0';
+		}
+		else if (key == SDLK_KP_1) {
+			key_out = '1';
+		}
+		else if (key == SDLK_KP_2) {
+			key_out = '2';
+		}
+		else if (key == SDLK_KP_3) {
+			key_out = '3';
+		}
+		else if (key == SDLK_KP_4) {
+			key_out = '4';
+		}
+		else if (key == SDLK_KP_5) {
+			key_out = '5';
+		}
+		else if (key == SDLK_KP_6) {
+			key_out = '6';
+		}
+		else if (key == SDLK_KP_7) {
+			key_out = '7';
+		}
+		else if (key == SDLK_KP_8) {
+			key_out = '8';
+		}
+		else if (key == SDLK_KP_9) {
+			key_out = '9';
+		}
+		else if (key == SDLK_KP_MINUS) {
 			key_out = '-';
 		}
-	}
-	else if (key == SDLK_EQUALS) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '+';
-		}
-		else {
+		else if (key == SDLK_KP_EQUALS) {
 			key_out = '=';
 		}
-	}
-	else if (key == SDLK_BACKQUOTE) {
-		if (modstate & KMOD_SHIFT) {
-			key_out = '~';
+		else if (key == SDLK_KP_PLUS) {
+			key_out = '+';
+		}
+		else if (key == SDLK_KP_DIVIDE) {
+			key_out = '/';
+		}
+		else if (key == SDLK_KP_MULTIPLY) {
+			key_out = '*';
+		}
+		else if (key == SDLK_KP_DECIMAL) {
+			key_out = '.';
+		}
+		else if (key == SDLK_KP_ENTER) {
+			key_out = 0x0d;
 		}
 		else {
-			key_out = '`';
+			key_out = -1;
 		}
 	}
-	else if (key == SDLK_1 && modstate & KMOD_SHIFT) {
-		key_out = '!';
-	}
-	else if (key == SDLK_2 && modstate & KMOD_SHIFT) {
-		key_out = '@';
-	}
-	else if (key == SDLK_3 && modstate & KMOD_SHIFT) {
-		key_out = '#';
-	}
-	else if (key == SDLK_4 && modstate & KMOD_SHIFT) {
-		key_out = '$';
-	}
-	else if (key == SDLK_5 && modstate & KMOD_SHIFT) {
-		key_out = '%';
-	}
-	else if (key == SDLK_6 && modstate & KMOD_SHIFT) {
-		key_out = '^';
-	}
-	else if (key == SDLK_7 && modstate & KMOD_SHIFT) {
-		key_out = '&';
-	}
-	else if (key == SDLK_8 && modstate & KMOD_SHIFT) {
-		key_out = '*';
-	}
-	else if (key == SDLK_9 && modstate & KMOD_SHIFT) {
-		key_out = '(';
-	}
-	else if (key == SDLK_0 && modstate & KMOD_SHIFT) {
-		key_out = ')';
-	}
-	else if (key == SDLK_KP_0) {
-		key_out = '0';
-	}
-	else if (key == SDLK_KP_1) {
-		key_out = '1';
-	}
-	else if (key == SDLK_KP_2) {
-		key_out = '2';
-	}
-	else if (key == SDLK_KP_3) {
-		key_out = '3';
-	}
-	else if (key == SDLK_KP_4) {
-		key_out = '4';
-	}
-	else if (key == SDLK_KP_5) {
-		key_out = '5';
-	}
-	else if (key == SDLK_KP_6) {
-		key_out = '6';
-	}
-	else if (key == SDLK_KP_7) {
-		key_out = '7';
-	}
-	else if (key == SDLK_KP_8) {
-		key_out = '8';
-	}
-	else if (key == SDLK_KP_9) {
-		key_out = '9';
-	}
-	else if (key == SDLK_KP_MINUS) {
-		key_out = '-';
-	}
-	else if (key == SDLK_KP_EQUALS) {
-		key_out = '=';
-	}
-	else if (key == SDLK_KP_PLUS) {
-		key_out = '+';
-	}
-	else if (key == SDLK_KP_DIVIDE) {
-		key_out = '/';
-	}
-	else if (key == SDLK_KP_MULTIPLY) {
-		key_out = '*';
-	}
-	else if (key == SDLK_KP_DECIMAL) {
-		key_out = '.';
-	}
-	else if (key == SDLK_KP_ENTER) {
-		key_out = 0x0d;
-	}
-	else {
-		key_out = -1;
+	else if (language == 7) { /* GER */
+		if (key == SDL_GetKeyFromScancode(SDL_SCANCODE_LEFTBRACKET)) {
+			if (modstate & KMOD_SHIFT) {
+				key_out = 'Ü';
+			}
+			else {
+				key_out = 'ü';
+			}
+		}
 	}
 
 	m_keyinput(key_out, 0);
@@ -1064,6 +1085,9 @@ uint8_t convert_SDL_to_OIS_keycode(uint8_t sdlKeyCode) {
 
 void __stdcall initManager() {
 	printf("Initializing Manager!\n");
+	printf("Locale: %s\n", locale->language);
+	printf("Language: %d\n", language);
+
 
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory3, MAX_PATH);
 
@@ -1092,6 +1116,8 @@ void __stdcall initManager() {
 		}
 
 	}
+
+
 
 	loadInputSettings(&inputsettings);
 	loadKeyBinds(&keybinds);

@@ -432,6 +432,54 @@ uint32_t patchButtonLookup(char* p_button) {
 	
 }
 
+uint32_t patchButtonLookup2(char* p_button) {
+
+	uint8_t value = *p_button;
+	uint8_t value_new = *p_button;
+	uint8_t* map = (uint8_t*)0x005E2155;
+
+	// eax = value after prologue. ebx = char* p_button
+
+	if ((0x27 > (value - 0x4D)) && ((value - 0x4D) > 0x00)) {
+		value = *(uint8_t*)(map + value); /* step through map */
+
+		switch (value) {
+		case 0:
+			value = 0x33;
+			break;
+		case 1:
+			break;
+		case 2:
+			break;
+		case 3:
+			break;
+		case 4:
+			break;
+		case 5:
+			break;
+		case 6:
+			value = 0x67;
+			break;
+		case 7:
+			break;
+		default:
+			break;
+		}
+
+
+	}
+
+	if (0x0A > (value - 0x30))
+		return (value - 0x30);
+	else if ((0x16 > (value - 0x61)) && (0x16 > (value - 0x41)))
+		return (value - 0x37);
+	else
+		return value;
+
+
+
+}
+
 void patch_button_font(uint8_t sel)
 {
 	/* 1 = PC (default), 3 = Xbox. Both have the same text: Xbox.buttons_font*/
