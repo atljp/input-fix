@@ -91,9 +91,9 @@ typedef void __fastcall second_unkNativeCall(uint32_t param1);
 second_unkNativeCall* second_unkNative = (second_unkNativeCall*)(0x004711D0);
 
 
-void __fastcall first_unk(uint32_t param1) {
+void __fastcall unload_script(uint32_t param1) {
 	
-	/* Call GetArray maybe */
+	/* Calls GetArray maybe */
 	__asm {
 		push ecx
 		mov eax, 0x478CC0
@@ -121,12 +121,17 @@ const char scriptname[] = "scripts\\game\\game.qb";
 int a = 0;
 int b = 1004;
 
-
+bool done = false;
 void __cdecl loadcustomqb()
 {
-	first_unk(0x3B4548B8); // enter_kb_chat
+
+
+	unload_script(0x3B4548B8); // enter_kb_chat
 	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
 	sCreateScriptSymbolWrapper(0x3B4548B8, checksum, (const char*)scriptname);
+
+	if (mScriptsettings.suninnetgame)
+		unload_script(0x8054f197); /* disablesun*/
 
 	/*
 	static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
@@ -207,6 +212,9 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 
 void patchScripts() {
 
+	/* First, get config from INI. struct defined in config.h */
+	getconfig(&mScriptsettings);
+
 	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched); /* returns true for the neversoft test skater */
 	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper); /* adjusts scale and position of main menu screen elements in widescreen */
 	patchCall((void*)0x00474F25, LookUpSymbol_Patched); /* accesses the global hash map */
@@ -218,11 +226,9 @@ void patchScripts() {
 	uint32_t bb = 0xDEADBEEF;
 	printf("0x%08x\n", bb);
 
-	/* First, get config from INI. struct defined in config.h */
-	getconfig(&mScriptsettings);
 
 
-	//patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
+	patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
 
 
 

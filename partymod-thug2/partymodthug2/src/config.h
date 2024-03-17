@@ -113,7 +113,8 @@ struct inputsettings {
 };
 
 struct scriptsettings {
-	int airdrift;
+	uint8_t airdrift;
+	uint8_t suninnetgame;
 };
 
 void initPatch();

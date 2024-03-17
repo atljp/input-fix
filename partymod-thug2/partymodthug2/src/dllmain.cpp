@@ -14,6 +14,7 @@
 #include <QB/LazyStruct.h>
 #include <QB/Qb.h>
 #include <QB/script.h>
+#include <displayconfig.h>
 
 BOOL dpi_result = SetProcessDPIAware(); //Prevent DPI scaling
 
@@ -27,6 +28,7 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 
 		// install patches
 		initPatch();
+		patchresbuffer();
 		patchWindow();
 		patchInput();
 		patchScripts();

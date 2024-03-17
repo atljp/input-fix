@@ -34,9 +34,9 @@
 #define ADDR_FUNC_LangFromReg				0x005B60DB
 #define	ADDR_PlatformFlag					0x0051F4C8
 
-#define ADDR_SpinLagL						0x00504239 // unused
-#define ADDR_SpinLagR						0x0050430B // unused
-#define ADDR_SpinDelay						0x00504223
+#define ADDR_SpinLagL						0x00504239
+#define ADDR_SpinLagR						0x0050430B
+#define ADDR_SpinDelay						0x00504223 // unused
 
 #define ADDR_IntroMovies					0x0044F830
 #define ADDR_AirDrift						0x00526A40

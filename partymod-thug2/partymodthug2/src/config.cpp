@@ -21,7 +21,6 @@ uint8_t* clipping_distance_2 = (uint8_t*)(0x007D6440); //0x00 - 0x64 val
 uint8_t* fog = (uint8_t*)(0x007D6436);
 HWND* hwnd = (HWND*)0x007D6A28;
 
-uint8_t resbuffer[100000];	// buffer needed for high resolutions
 uint8_t isBorderless;
 
 int defWidth;
@@ -31,8 +30,12 @@ uint8_t console;
 uint8_t language;
 uint8_t buttonfont;
 uint8_t intromovies;
-int airdrift; /* this has to be int for some reason */
 uint8_t spindelay;
+uint8_t airdrift;
+uint8_t suninnetgame;
+
+
+
 
 typedef struct {
 	uint32_t antialiasing;
@@ -47,6 +50,8 @@ int resY;
 float aspect_ratio;
 graphicsSettings graphics_settings;
 SDL_Window* window;
+
+
 
 void enforceMaxResolution() {
 
@@ -164,7 +169,7 @@ void patchWindow() {
 	// replace the window with an SDL2 window.  this kind of straddles the line between input and config
 	patchCall((void*)ADDR_FUNC_CreateWindow, &createSDLWindow);
 	patchByte((void*)(ADDR_FUNC_CreateWindow + 5), 0xC3);
-	patchDWord((void*)ADDR_Resbuffer, (uint32_t)&resbuffer);
+	
 	patchNop((void*)ADDR_FixWindowPos, 14);	// don't move window to corner
 
 	//Don't load launcher settings from registry, use our own ini values instead
@@ -191,10 +196,20 @@ void initPatch() {
 	/* Read INI config values*/
 	console = getIniBool("Miscellaneous", "Console", 0, configFile);
 	language = GetPrivateProfileInt("Miscellaneous", "Language", 1, configFile);
-	buttonfont = GetPrivateProfileInt("Miscellaneous", "ButtonFont", 0, configFile);
+	buttonfont = GetPrivateProfileInt("Miscellaneous", "ButtonFont", 1, configFile);
 	intromovies = getIniBool("Miscellaneous", "IntroMovies", 1, configFile);
 	airdrift = getIniBool("Gameplay", "THUGAirDrift", 0, configFile);
+	suninnetgame = getIniBool("Extra", "SunInNetGame", 0, configFile);
 	spindelay = getIniBool("Gameplay", "SpinDelay", 1, configFile);
+	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
+	graphics_settings.hqshadows = getIniBool("Graphics", "HQShadows", 0, configFile);
+	graphics_settings.distanceclipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
+	graphics_settings.clippingdistance = GetPrivateProfileInt("Graphics", "ClippingDistance", 100, configFile);
+	graphics_settings.fog = getIniBool("Graphics", "Fog", 0, configFile);
+	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 640, configFile);
+	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
+	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
+	isBorderless = getIniBool("Graphics", "Borderless", 0, configFile);
 
 
 	/* Allocate console */
@@ -225,7 +240,7 @@ void initPatch() {
 	else
 		patchByte((void*)ADDR_LanguageFlag, 1);
 
-	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Load and savegames from multiple language settings
+	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Load and save savegames from multiple language settings
 	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
 	printf("Loading language setting: %s\n", (language == 1) ? "English" : ((language == 2) ? "French" : ((language == 3) ? "German" : "English")));
 
@@ -264,16 +279,6 @@ void initPatch() {
 
 
 	/* Graphic settings */
-	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
-	graphics_settings.hqshadows = getIniBool("Graphics", "HQShadows", 0, configFile);
-	graphics_settings.distanceclipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
-	graphics_settings.clippingdistance = GetPrivateProfileInt("Graphics", "ClippingDistance", 100, configFile);
-	graphics_settings.fog = getIniBool("Graphics", "Fog", 0, configFile);
-	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 640, configFile);
-	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
-	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
-	isBorderless = getIniBool("Graphics", "Borderless", 0, configFile);
-
 	printf("Graphic settings - Fullscreen Anti-Aliasing: %s\n", graphics_settings.antialiasing ? "Enabled" : "Disabled");
 	printf("Graphic settings - HQ Shadows: %s\n", graphics_settings.hqshadows ? "Enabled" : "Disabled");
 	printf("Graphic settings - Distance Clipping: %s\n", graphics_settings.distanceclipping ? "Enabled" : "Disabled");
@@ -333,7 +338,7 @@ void patchStaticValues() {
 	patchNop((void*)0x004B2DC4, 5);
 	patchNop((void*)0x004B3405, 5);
 
-	//Change strings: gamespy to openspy
+	//Patch static values for online play
 	patchBytesM((void*)0x0064CD97, (BYTE*)"\x74\x68\x6D\x6F\x64\x73\x2E\x63\x6F\x6D\x2F\x6D\x6F\x74\x64\x2E\x64\x61\x74\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 65);
 	patchBytesM((void*)0x0064D67A, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
 	patchBytesM((void*)0x0066729D, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
@@ -376,6 +381,7 @@ void getconfig(struct scriptsettings* scriptsettingsOut)
 {
 	if (scriptsettingsOut) {
 		scriptsettingsOut->airdrift = airdrift;
+		scriptsettingsOut->suninnetgame = suninnetgame;
 	}
 }
 
@@ -419,42 +425,67 @@ uint32_t patchButtonLookup(char* p_button) {
 
 	
 	//return ButtonLookup_Native(button);
+	//return 5;
+
 	
-	//return 4;
-
-	/*
-	* \b4 = Select
-
-	* 
-	Ps2: 
-	0x00 = Triangle
-	0x01 = Square
-	0x02 = Circle
-	0x03 = X
-
-	PC:
-	0x04 = Arrow Down
-	*/
 }
 
 void patch_button_font(uint8_t sel)
 {
-
 	/* 1 = PC (default), 3 = Xbox. Both have the same text: Xbox.buttons_font*/
 
 	if (sel == 2)
 		patchDWord((void*)0x00648B03, 0x00327350); // Ps2..buttons_font
 	else if (sel == 4)
-		patchDWord((void*)0x00648B03, 0x0063674E); //Ngc..buttons_font
-
+		patchDWord((void*)0x00648B03, 0x0063674E); // Ngc..buttons_font
 
 	if (1 < sel && sel < 5)
 	{
-		patchBytesM((void*)(0x004CFF36 + 1), (BYTE*)"\x11\x77", 2);
-		patchBytesM((void*)0x004CFF3C, (BYTE*)"\xEB\x68", 2);
-		patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40); //Font lookup
-		patchCall((void*)0x004CFF0C, &patch_button_lookup);
+		patchByte((void*)(0x004CFF36 + 1), 0x11); 
+		patchByte((void*)0x004CFF38, 0x77); /* jump if above 0x11 */
+
+		patchByte((void*)0x004CFF3C, 0xEB); 
+		patchByte((void*)(0x004CFF3C + 1), 0x68); /* stop and jump to end */
+
+		/* first code cave that holds at least 40 bytes */
+		patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40);
+
+		patchCall((void*)0x004CFF0C, &patch_button_lookup);//&patchButtonLookup);
 	}
+
+	/*
+	0x00 = Triangle				(Ps2)
+	0x01 = Square				(Ps2)
+	0x02 = Circle				(Ps2)
+	0x03 = X					(Ps2)
+	0x04 = Arrow Down			(PC)
+	0x05 = Arrow Right			(PC)
+	0x06 = Arrow Left			(PC)
+	0x07 = Arrow Up				(PC)
+	0x08 = Arrow Right			(??)
+	0x09 = Start				(??)
+	0x0A = Arrow Down Right		(PC)
+	0x0B = Arrow Up Left		(PC)
+	0x0C = Arrow Down Left		(PC)
+	0x0D = Arrow Up Right		(PC)
+	0x0E = [L1]					(Ps2)
+	0x0F = [R1]					(Ps2)
+	0x10 = [L2]					(Ps2)
+	0x11 = [R2]					(Ps2)
+	0x12 = +					(??)
+	0x13 = Y/C					(??)
+	0x14 = S/X					(??)
+	0x15 = <empty>				(??)
+	0x16 = ENT					(PC)
+	0x17 = ESC					(PC)
+	0x18 = E					(PC)
+	0x19 = R					(PC)
+	0x1A = ß					(PC)
+	0x1B = `					(PC)
+	0x1C = 1					(PC)
+	0x1D = 2					(PC)
+	Rest is empty
+	*/
 }
 
 
