@@ -31,7 +31,7 @@ typedef void* sCreateScriptSymbol_NativeCall(uint32_t nameChecksum, uint32_t con
 sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall*)(0x0046FE40); //0x00479110
 
 typedef uint32_t __cdecl CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
-CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Native = (CalculateScriptContentsChecksum_NativeCall*)(0x0046f960);
+CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Native = (CalculateScriptContentsChecksum_NativeCall*)(0x0046F960);
 
 typedef void __cdecl CreateScreenElement_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 CreateScreenElement_NativeCall* CreateScreenElement_Native = (CreateScreenElement_NativeCall*)(0x004AD240);
@@ -71,7 +71,7 @@ ParseQB_NativeCall* ParseQB_Native = (ParseQB_NativeCall*)(0x00472420);
 void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertIfDuplicateSymbols, bool allocateChecksumNameLookupTable) {
 	
 	// ecx is unused and left at 1
-
+	
 	if (!strcmp(p_fileName, "scripts\\game\\game.qb")) {
 		ParseQB_Native(p_fileName, (uint8_t*)&game_new, 1, assertIfDuplicateSymbols, allocateChecksumNameLookupTable);
 	}
@@ -118,16 +118,13 @@ void __cdecl sCreateScriptSymbolWrapper(uint32_t nameChecksum, uint32_t contents
 }
 
 const char scriptname[] = "scripts\\game\\game.qb";
-int a = 0;
-int b = 1004;
-
-bool done = false;
 void __cdecl loadcustomqb()
 {
 
 
 	unload_script(0x3B4548B8); // enter_kb_chat
 	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
+	// 0x30235dfa, checksum in eax
 	sCreateScriptSymbolWrapper(0x3B4548B8, checksum, (const char*)scriptname);
 
 	if (mScriptsettings.suninnetgame)
