@@ -9,7 +9,7 @@
 - Option to disable intro movies
 - Blur fix
 - Selectable languages (English, French, German)
-- Selectable button fonts (Keyboard, PS2, XBOX, or NGC)
+- Selectable button fonts (Keyboard, Ps2, Xbox, or Ngc)
 - Stability fixes (e.g., for level merging)
 - Fixed RNG
 - THUG Airdrift

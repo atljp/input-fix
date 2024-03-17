@@ -1147,9 +1147,6 @@ void patchPs2Buttons()
 	//No Spinlag
 	patchNop((void*)ADDR_SpinLagL, 2);
 	patchNop((void*)ADDR_SpinLagR, 2);
-
-	//PS2 Buttons
-	//patch_button_font();
 }
 
 void patchInput() {

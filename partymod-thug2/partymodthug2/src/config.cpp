@@ -33,6 +33,7 @@ uint8_t intromovies;
 uint8_t spindelay;
 uint8_t airdrift;
 uint8_t suninnetgame;
+uint8_t boardscuffs;
 
 
 
@@ -198,9 +199,10 @@ void initPatch() {
 	language = GetPrivateProfileInt("Miscellaneous", "Language", 1, configFile);
 	buttonfont = GetPrivateProfileInt("Miscellaneous", "ButtonFont", 1, configFile);
 	intromovies = getIniBool("Miscellaneous", "IntroMovies", 1, configFile);
+	spindelay = getIniBool("Gameplay", "SpinDelay", 1, configFile);
 	airdrift = getIniBool("Gameplay", "THUGAirDrift", 0, configFile);
 	suninnetgame = getIniBool("Extra", "SunInNetGame", 0, configFile);
-	spindelay = getIniBool("Gameplay", "SpinDelay", 1, configFile);
+	boardscuffs = getIniBool("Extra", "Boardscuffs", 1, configFile);
 	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
 	graphics_settings.hqshadows = getIniBool("Graphics", "HQShadows", 0, configFile);
 	graphics_settings.distanceclipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
@@ -329,7 +331,7 @@ void patchStaticValues() {
 	patchByte((void*)(0x005BBCBE + 4), 0x10);
 	patchByte((void*)(0x005BBCD9 + 4), 0x10);
 
-	/* Blur fix (necessary since Windows Vista) */
+	/* Blur fix (since Windows Vista) */
 	patchBytesM((void*)ADDR_FUNC_BlurEffect, (BYTE*)"\xB0\x01\xC3\x90\x90", 5);
 
 	/* Slight graphical improvements */
@@ -382,6 +384,7 @@ void getconfig(struct scriptsettings* scriptsettingsOut)
 	if (scriptsettingsOut) {
 		scriptsettingsOut->airdrift = airdrift;
 		scriptsettingsOut->suninnetgame = suninnetgame;
+		scriptsettingsOut->boardscuffs = boardscuffs;
 	}
 }
 

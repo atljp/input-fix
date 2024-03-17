@@ -23,12 +23,18 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
 
 struct scriptsettings mScriptsettings;
 
+
+
 /// <summary>
 /// Scripty stuff
 /// </summary>
 
-typedef void* sCreateScriptSymbol_NativeCall(uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName);
-sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall*)(0x0046FE40); //0x00479110
+/*
+typedef void* (__fastcall* sCreateScriptSymbol_NativeCall)(uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName);
+sCreateScriptSymbol_NativeCall sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall)(0x0046FE40);
+*/
+typedef void* __cdecl sCreateScriptSymbol_NativeCall(uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum);
+sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall*)(0x0046FE40);
 
 typedef uint32_t __cdecl CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
 CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Native = (CalculateScriptContentsChecksum_NativeCall*)(0x0046F960);
@@ -57,7 +63,7 @@ void LookUpSymbol_Patched(uint32_t checksum) {
 		patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
 		walkspinpatched = true;
 	}
-	else if (checksum == 0x9CE4DA4F && !boardscuffpatched) {
+	else if (!mScriptsettings.boardscuffs && checksum == 0x9CE4DA4F && !boardscuffpatched) {
 		patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
 		boardscuffpatched = true;
 	}
@@ -70,7 +76,7 @@ ParseQB_NativeCall* ParseQB_Native = (ParseQB_NativeCall*)(0x00472420);
 
 void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertIfDuplicateSymbols, bool allocateChecksumNameLookupTable) {
 	
-	// ecx is unused and left at 1
+	// ecx is unused, default: 1
 	
 	if (!strcmp(p_fileName, "scripts\\game\\game.qb")) {
 		ParseQB_Native(p_fileName, (uint8_t*)&game_new, 1, assertIfDuplicateSymbols, allocateChecksumNameLookupTable);
@@ -108,41 +114,22 @@ void __fastcall unload_script(uint32_t param1) {
 		LAB_RET : 
 	}
 }
-
-void __cdecl sCreateScriptSymbolWrapper(uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName) {
-
-	printf("%s\n", p_fileName);
-
-
-
-}
-
 const char scriptname[] = "scripts\\game\\game.qb";
-void __cdecl loadcustomqb()
-{
+void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum) {
 
 
-	unload_script(0x3B4548B8); // enter_kb_chat
-	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
-	// 0x30235dfa, checksum in eax
-	sCreateScriptSymbolWrapper(0x3B4548B8, checksum, (const char*)scriptname);
+	//printf("%s\n", p_fileName);
 
-	if (mScriptsettings.suninnetgame)
-		unload_script(0x8054f197); /* disablesun*/
-
+	//static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
+	//static uint32_t* addr_scrname = (uint32_t*)&scriptname;
+	//printf("%d, %d", sCreateScriptSymbol_asm, addr_scrname);
 	/*
-	static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
-	static uint32_t* addr_scrname = (uint32_t*)&scriptname;
-
 	__asm {
-		mov eax, addr_scrname
-		ret
-
-		push ebp
-		mov ebp, esp
+		//push ebp
+		//mov ebp, esp
 		sub esp, 0xC
 		and dword ptr ss : [ebp - 0x4] , 0x0
-		push ebx
+		//push ebx
 		mov dword ptr ss : [ebp - 0x8] , edx
 		mov dword ptr ss : [ebp - 0xC] , ecx
 		push dword ptr ss : [ebp + 0x10]
@@ -150,18 +137,42 @@ void __cdecl loadcustomqb()
 		push dword ptr ss : [ebp + 0x8]
 		mov ebx, dword ptr ss : [ebp - 0x8]
 		mov eax, dword ptr ss : [ebp - 0xC]
-		call sCreateScriptSymbol_asm
+		call dword ptr ds : [0x004013D5]
 		mov dword ptr ss : [ebp - 0x4] , eax
 		add esp, 0xC
 		mov eax, dword ptr ss : [ebp - 0x4]
-		pop ebx
-		mov esp, ebp
-		pop ebp
-		ret
+		//pop ebx
+		//mov esp, ebp
+		//pop ebp
+		//ret
 	}
 	*/
-	//void* dummyresult = sCreateScriptSymbol_Native(0x3B4548B8, checksum, (const char*)scriptname);
+	sCreateScriptSymbol_Native(size, p_data, p_fileName, nameChecksum, contentsChecksum);
+							/* ecx,  edx,     [esp+8],   <const>,      eax */
+}
+
+
+void __cdecl loadcustomqb()
+{
+	unload_script(0x3B4548B8); // enter_kb_chat
+	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
+	// 0x30235dfa, checksum in eax
+	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, scriptname, 0x3B4548B8, checksum);
+	//sCreateScriptSymbolWrapper(0x3B4548B8, checksum, (const char*)scriptname);
+	//printf("Checksum: 0x%08x\n", checksum);
+
+	
+	// First argument: ecx | second argument: edx | furher arguments pushed onto stack
+	// ecx = 0x9E, edx = *checksum
+	// 
+	// 
+	//void* sCreateScriptSymbol_Native(0x3B4548B8, checksum, (const char*)scriptname);
+	//CSymbolTableEntry *sCreateScriptSymbol(uint32 nameChecksum, uint32 contentsChecksum, const uint8 *p_data, uint32 size, const char *p_fileName);
 	//uint32_t* dummyresult = sCreateScriptSymbol_Native(0x3b4548b8, checksum, (const char)"scripts\\game\\game.qb");
+
+
+	if (mScriptsettings.suninnetgame)
+		unload_script(0x8054f197); /* disablesun */
 }
 
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986
@@ -224,8 +235,8 @@ void patchScripts() {
 	printf("0x%08x\n", bb);
 
 
-
-	patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
+	patchDWord((void*)0x004013D5, 0x0046FE40);
+	//patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
 
 
 
