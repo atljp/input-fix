@@ -36,8 +36,6 @@ uint8_t suninnetgame;
 uint8_t boardscuffs;
 
 
-
-
 typedef struct {
 	uint32_t antialiasing;
 	uint32_t hqshadows;
@@ -555,8 +553,11 @@ void loadInputSettings(struct inputsettings* settingsOut) {
 	char configFile[MAX_PATH];
 	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
 
-	if (settingsOut)
-		settingsOut->isPs2Controls = getIniBool("Miscellaneous", "UsePS2Controls", 1, configFile);
+	if (settingsOut) {
+		settingsOut->isPs2Controls = getIniBool("Controls", "Ps2Controls", 1, configFile);
+		settingsOut->invertRXplayer1 = getIniBool("Controls", "InvertRXPlayer1", 0, configFile);
+		settingsOut->invertRYplayer1 = getIniBool("Controls", "InvertRYPlayer1", 0, configFile);	
+	}
 }
 
 /* Keyboard binds */

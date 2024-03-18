@@ -110,6 +110,8 @@ struct controllerbinds {
 
 struct inputsettings {
 	uint8_t isPs2Controls;
+	uint8_t invertRXplayer1;
+	uint8_t invertRYplayer1;
 };
 
 struct scriptsettings {

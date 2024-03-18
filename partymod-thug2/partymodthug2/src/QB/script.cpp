@@ -98,22 +98,20 @@ second_unkNativeCall* second_unkNative = (second_unkNativeCall*)(0x004711D0);
 
 
 void __fastcall unload_script(uint32_t param1) {
-	
-	/* Calls GetArray maybe */
 	__asm {
 		push ecx
 		mov eax, 0x478CC0
 		CALL eax
 		pop ecx
 		test eax, eax
-		jz LAB_RET
+		jz $+0x09
 		push eax
 		mov eax, 0x4711D0
 		CALL eax
 		pop ecx
-		LAB_RET : 
 	}
 }
+
 const char scriptname[] = "scripts\\game\\game.qb";
 void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum) {
 
@@ -147,7 +145,7 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 		//ret
 	}
 	*/
-	sCreateScriptSymbol_Native(size, p_data, p_fileName, nameChecksum, contentsChecksum);
+	//sCreateScriptSymbol_Native(size, p_data, p_fileName, nameChecksum, contentsChecksum);
 							/* ecx,  edx,     [esp+8],   <const>,      eax */
 }
 
@@ -236,7 +234,7 @@ void patchScripts() {
 
 
 	patchDWord((void*)0x004013D5, 0x0046FE40);
-	//patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
+	patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
 
 
 

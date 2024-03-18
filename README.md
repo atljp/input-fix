@@ -20,7 +20,6 @@
 
 ## TODO
 
-- Invert camera stick
 - Adjustable Drop down key(s)
 - Change GameSpy to OpenSpy
 - Separate menu controls
