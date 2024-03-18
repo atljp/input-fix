@@ -400,15 +400,66 @@ int Rnd_fixed(int n)
 	return (rand() % n);
 }
 
-
 typedef uint32_t ButtonLookup_NativeCall(char* button);
 ButtonLookup_NativeCall* ButtonLookup_Native = (ButtonLookup_NativeCall*)(0x004020E0);
 
 uint32_t patchButtonLookup(char* p_button) {
 
 	uint8_t value = *p_button;
+	uint8_t original_value = *p_button;
+	uint8_t base = *(p_button - 0x30);
+	uint8_t* map = (uint8_t*)0x005E2155;
 
-	if ((0x30 < value) && (value < 0x39)) {
+	if ((value > 0x4C) && (value < 0x75)) {
+		value = *(uint8_t*)(map + value - 0x4D); /* step through map */
+
+		switch (value) {
+		case 0:
+			value = 0x33;
+			break;
+		case 1:
+			value = 0x32;
+			break;
+		case 2:
+			value = 0x31;
+			break;
+		case 3:
+			value = 0x30;
+			break;
+		case 4:
+			value = 0x65;
+			break;
+		case 5:
+			value = 0x66;
+			break;
+		case 6:
+			value = 0x67;
+			break;
+		case 7:
+			value = 0x68;
+			break;
+		default:
+			value = original_value;
+			break;
+		}
+	}
+	if (value < 0x3A) {
+		return (value - 0x30);
+	}
+	else if (value < 0x57) {
+		return (value - 0x37);
+	}
+	else if (value < 0x77) {
+		return (value - 0x57);
+	}
+	else { return 0; }
+
+	/* return ButtonLookup_Native(button); */
+	/* Original implementation */
+	/*
+	uint8_t value = *p_button;
+
+	if ((value > 0x30) && (value < 0x39)) {
 		return (value - 0x30);
 	}
 	else if ((value > 0x41) && (value < 0x56)) {
@@ -417,65 +468,44 @@ uint32_t patchButtonLookup(char* p_button) {
 	else if ((value > 0x61) && (value < 0x76)) {
 		return (value - 0x57);
 	}
-	else { 
+	else {
 		return 0;
 	}
-		
+	*/
 
-
-	
-	//return ButtonLookup_Native(button);
-	//return 5;
-
-	
-}
-
-uint32_t patchButtonLookup2(char* p_button) {
-
-	uint8_t value = *p_button;
-	uint8_t value_new = *p_button;
-	uint8_t* map = (uint8_t*)0x005E2155;
-
-	// eax = value after prologue. ebx = char* p_button
-
-	if ((0x27 > (value - 0x4D)) && ((value - 0x4D) > 0x00)) {
-		value = *(uint8_t*)(map + value); /* step through map */
-
-		switch (value) {
-		case 0:
-			value = 0x33;
-			break;
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		case 4:
-			break;
-		case 5:
-			break;
-		case 6:
-			value = 0x67;
-			break;
-		case 7:
-			break;
-		default:
-			break;
-		}
-
-
-	}
-
-	if (0x0A > (value - 0x30))
-		return (value - 0x30);
-	else if ((0x16 > (value - 0x61)) && (0x16 > (value - 0x41)))
-		return (value - 0x37);
-	else
-		return value;
-
-
-
+	/*
+	0x00 = Triangle
+	0x01 = Square
+	0x02 = Circle
+	0x03 = X
+	0x04 = Arrow Down
+	0x05 = Arrow Right
+	0x06 = Arrow Left
+	0x07 = Arrow Up
+	0x08 = Select
+	0x09 = Start
+	0x0A = Arrow Down Right
+	0x0B = Arrow Up Left
+	0x0C = Arrow Down Left
+	0x0D = Arrow Up Right
+	0x0E = [L1]
+	0x0F = [R1]
+	0x10 = [L2]
+	0x11 = [R2]
+	0x12 = +
+	0x13 = Y/C
+	0x14 = S/X
+	0x15 = <empty>
+	0x16 = ENT
+	0x17 = ESC
+	0x18 = E
+	0x19 = R
+	0x1A = ß
+	0x1B = `
+	0x1C = 1
+	0x1D = 2
+	Rest is empty
+	*/
 }
 
 void patch_button_font(uint8_t sel)
@@ -498,46 +528,9 @@ void patch_button_font(uint8_t sel)
 		/* first code cave that holds at least 40 bytes */
 		patchBytesM((void*)0x005E2155, (BYTE*)"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x00\x01\x02\x03\x04\x05\x06\x07", 40);
 
-		patchCall((void*)0x004CFF0C, &patch_button_lookup);//&patchButtonLookup);
+		patchCall((void*)0x004CFF0C, &patchButtonLookup);
 	}
-
-	/*
-	0x00 = Triangle				(Ps2)
-	0x01 = Square				(Ps2)
-	0x02 = Circle				(Ps2)
-	0x03 = X					(Ps2)
-	0x04 = Arrow Down			(PC)
-	0x05 = Arrow Right			(PC)
-	0x06 = Arrow Left			(PC)
-	0x07 = Arrow Up				(PC)
-	0x08 = Arrow Right			(??)
-	0x09 = Start				(??)
-	0x0A = Arrow Down Right		(PC)
-	0x0B = Arrow Up Left		(PC)
-	0x0C = Arrow Down Left		(PC)
-	0x0D = Arrow Up Right		(PC)
-	0x0E = [L1]					(Ps2)
-	0x0F = [R1]					(Ps2)
-	0x10 = [L2]					(Ps2)
-	0x11 = [R2]					(Ps2)
-	0x12 = +					(??)
-	0x13 = Y/C					(??)
-	0x14 = S/X					(??)
-	0x15 = <empty>				(??)
-	0x16 = ENT					(PC)
-	0x17 = ESC					(PC)
-	0x18 = E					(PC)
-	0x19 = R					(PC)
-	0x1A = ß					(PC)
-	0x1B = `					(PC)
-	0x1C = 1					(PC)
-	0x1D = 2					(PC)
-	Rest is empty
-	*/
 }
-
-
-
 
 /* provide info about ps2 layout for input.cpp */
 void loadInputSettings(struct inputsettings* settingsOut) {
@@ -649,102 +642,3 @@ void loadControllerBinds(struct controllerbinds* bindsOut)
 		bindsOut->camera = (controllerStick)GetPrivateProfileInt(CONTROLLER_SECTION, "CameraStick", CONTROLLER_STICK_RIGHT, configFile);
 	}
 }
-
-void __declspec(naked) patch_button_lookup()
-{
-	__asm {
-		push ebp
-		mov ebp, esp
-		mov ecx, dword ptr ss : [ebp + 0x8]
-		push ebx
-
-		mov cl, byte ptr ds : [ecx]
-		movsx eax, cl
-		add eax, 0xFFFFFFB3
-		cmp eax, 0x27
-		ja label_end
-
-		movzx eax, byte ptr ds : [eax + 0x005E2155]
-		cmp eax, 0x0
-		jne label_next_1
-		mov al, 0x33
-		jmp label_continue
-	label_next_1 :
-		cmp eax, 0x1
-		jne label_next_2
-		mov al, 0x32
-		jmp label_continue
-	label_next_2 :
-		cmp eax, 0x2
-		jne label_next_3
-		mov al, 0x31
-		jmp label_continue
-	label_next_3 :
-		cmp eax, 0x3
-		jne label_next_4
-		mov al, 0x30
-		jmp label_continue
-	label_next_4 :
-		cmp eax, 0x4
-		jne label_next_5
-		xor al, al
-	label_a :
-		lea eax, dword ptr ds : [eax * 2 + 0x65]
-		jmp label_continue
-	label_next_5 :
-		cmp eax, 0x5
-		jne label_next_6
-		xor al, al
-	label_b :
-		lea eax, dword ptr ds : [eax * 2 + 0x66]
-		jmp label_continue
-	label_next_6 :
-		cmp eax, 0x6
-		jne label_next_7
-		mov al, 0x1
-		jmp label_a
-	label_next_7 :
-		cmp eax, 0x7
-		jne label_next_8
-		mov al, 0x1
-		jmp label_b
-	label_next_8 :
-		mov al, cl
-		jmp label_continue
-
-	label_continue :
-		mov bl, al
-		xor edx, edx
-		lea ecx, dword ptr ds : [ebx - 0x30]
-		cmp cl, 0x9
-		ja label_h_1
-		movsx edx, bl
-		sub edx, 0x30
-		jmp label_h_3
-	label_h_1 :
-		mov al, bl
-		sub al, 0x61
-		cmp al, 0x15
-		ja label_h_2
-		movsx edx, bl
-		sub edx, 0x57
-		jmp label_h_3
-	label_h_2 :
-		mov al, bl
-		sub al, 0x41
-		cmp al, 0x15
-		ja label_h_3
-		movsx edx, bl
-		sub edx, 0x37
-	label_h_3 :
-		mov eax, edx
-		pop ebx
-		pop ebp
-		ret
-	label_end :
-		mov al, cl
-		jmp label_continue
-	}
-
-}
-

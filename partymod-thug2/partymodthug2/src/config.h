@@ -133,7 +133,6 @@ void setAspectRatio(float aspect);
 float getScreenAngleFactor();
 void patchWindow();
 void patch_button_font(uint8_t sel);
-void patch_button_lookup();
 float getScreenAngleFactor();
 float getaspectratio();
 void getconfig(struct scriptsettings* scriptsettingsOut);

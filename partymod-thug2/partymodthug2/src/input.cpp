@@ -504,10 +504,12 @@ void pollKeyboard(device* dev) {
 	if (keyboardState[0x28] && buffer == 0 && !isKeyboardTyping()) {
 		if (menu_on_screen()) {
 			dev->controlData[3] |= 0x01 << 6;
+			buffer = 15;
 		} else if (*(uint8_t*)(0x7CCDF8)) {
 			CheckChatHotkey();
+			buffer = 20;
 		}
-		buffer = 20;
+		
 	}
 
 	// Menu = ESC
@@ -1137,7 +1139,10 @@ void __stdcall initManager() {
 	// This allows to display keybinds set in the launcher in game (e.g., Edit Tricks menu or Freak Out Meter "Press PK_8 to freak out").
 	patchKeycode((void*)0x007D6794, convert_SDL_to_OIS_keycode(keybinds.grab)); //Grab
 	patchKeycode((void*)0x007D6798, convert_SDL_to_OIS_keycode(keybinds.kick)); //Flip
-	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind)); //Grind k0_11 4 --> 0x007D679C 05 00 00 00
+	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind)); //Grind
+	patchKeycode((void*)0x007D67B0, convert_SDL_to_OIS_keycode(keybinds.leftSpin)); //Leftspin, Nollie
+	patchKeycode((void*)0x007D67B4, convert_SDL_to_OIS_keycode(keybinds.rightSpin)); //Rightspin, Revert
+
 }
 
 void patchPs2Buttons()

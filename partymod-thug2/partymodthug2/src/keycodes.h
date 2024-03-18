@@ -88,6 +88,8 @@ const uint8_t OIS_KC_NUMPAD7 = 0x47;
 const uint8_t OIS_KC_NUMPAD8 = 0x48;
 const uint8_t OIS_KC_NUMPAD9 = 0x49;
 
+const uint8_t OIS_KC_RCONTROL = 0x9D;
+
 
 
 /*
@@ -143,4 +145,5 @@ std::map<uint8_t, uint8_t> SDL_to_OIS_map = {
     {SDL_SCANCODE_0, OIS_KC_0},
     {SDL_SCANCODE_ESCAPE, OIS_KC_ESC},
     {SDL_SCANCODE_SPACE, OIS_KC_SPACE},
+    {SDL_SCANCODE_RCTRL, OIS_KC_RCONTROL},
 };

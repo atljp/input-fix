@@ -77,7 +77,6 @@ ParseQB_NativeCall* ParseQB_Native = (ParseQB_NativeCall*)(0x00472420);
 void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertIfDuplicateSymbols, bool allocateChecksumNameLookupTable) {
 	
 	// ecx is unused, default: 1
-	
 	if (!strcmp(p_fileName, "scripts\\game\\game.qb")) {
 		ParseQB_Native(p_fileName, (uint8_t*)&game_new, 1, assertIfDuplicateSymbols, allocateChecksumNameLookupTable);
 	}
@@ -152,7 +151,7 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 
 void __cdecl loadcustomqb()
 {
-	unload_script(0x3B4548B8); // enter_kb_chat
+	//unload_script(0x3B4548B8); // enter_kb_chat
 	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
 	// 0x30235dfa, checksum in eax
 	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, scriptname, 0x3B4548B8, checksum);
