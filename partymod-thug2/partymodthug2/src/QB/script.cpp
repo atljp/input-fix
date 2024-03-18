@@ -184,9 +184,9 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 
 		if (pScript->mScriptNameChecksum == 0x7C92D11A) {  /* script: make_mainmenu_3d_plane */
 
-			pParams->GetChecksum(0x40C698AF, &p_checksum, false);  /* bg_plane */
+			pParams->GetChecksum(0x40C698AF, &p_checksum, false);  /* id */
 
-			if (p_checksum == 0xBC4B9584)
+			if (p_checksum == 0xBC4B9584) /* bg_plane */
 				pParams->AddInteger(0xED7C6031, 0xFFFFFEE7); /* cameraz */
 		}
 		else if (pScript->mScriptNameChecksum == 0xAD62B0B3) { /* script: build_roundbar */
@@ -195,8 +195,14 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
 
 			if (p_checksum == 0x5B9DA842 /* containerelement */ && p_checksum2 == 0x1954867E /* roundbar_bar */) {
-				pParams->AddFloat(0x13B9DA7B, 0.8f); /* scale */
-				pParams->AddPair(0x7F261953, 157.0f, 213.0f); /* pos */
+				if (getaspectratio() > 1.6f) {
+					pParams->AddFloat(0x13B9DA7B, 0.80f); /* scale */
+					pParams->AddPair(0x7F261953, 157.0f, 213.0f); /* pos */
+				}
+				else {
+					pParams->AddFloat(0x13B9DA7B, 0.88f); /* scale */
+					pParams->AddPair(0x7F261953, 142.0f, 212.0f); /* pos */
+				}
 			}
 		}
 		else if (pScript->mScriptNameChecksum = 0x59F6E121) { /* script: make_spin_menu */
@@ -205,8 +211,14 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
 
 			if (p_checksum == 0x130EF802 /* vmenu */ && p_checksum2 == 0xB0524B44 /* main_vmenu */) {
-				pParams->AddPair(0x7F261953, 116.0f, 214.0f); /* pos */
-				pParams->AddFloat(0x13B9DA7B, 0.72f); /* scale */
+				if (getaspectratio() > 1.6f) {
+					pParams->AddPair(0x7F261953, 116.0f, 214.0f); /* pos */
+					pParams->AddFloat(0x13B9DA7B, 0.72f); /* scale */
+				}
+				else {
+					pParams->AddPair(0x7F261953, 95.0f, 213.0f); /* pos */
+					pParams->AddFloat(0x13B9DA7B, 0.82f); /* scale */
+				}
 			}
 		}
 	}

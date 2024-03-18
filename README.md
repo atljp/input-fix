@@ -23,7 +23,6 @@
 - Adjustable Drop down key(s)
 - Change GameSpy to OpenSpy
 - Separate menu controls
-- Text inside the main menu wheel is not adjusted for 16:10
 
 ## Visual Studio Project
 
