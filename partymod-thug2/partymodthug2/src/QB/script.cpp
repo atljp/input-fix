@@ -2,9 +2,13 @@
 #include "config.h"
 #include "scriptcontent.h"
 
+struct scriptsettings mScriptsettings;
+
 struct DummyScript
 {
-	char unk[200];
+	char unk1[20];
+	Script::LazyStruct* GetParams;
+	char unk[176];
 	uint32_t mScriptNameChecksum;
 };
 
@@ -14,14 +18,46 @@ struct DummyUnkElem
 	uint32_t level;
 };
 
-bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript)
-{
+bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript) {
 	if (pScript->mScriptNameChecksum == 0x6AEC78DA)
 		return true;
 	return false;
 }
 
-struct scriptsettings mScriptsettings;
+typedef bool __cdecl GetMemCardSpaceAvailable_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
+GetMemCardSpaceAvailable_NativeCall* GetMemCardSpaceAvailable_Native = (GetMemCardSpaceAvailable_NativeCall*)(0x005A6E40);
+
+//Script::LazyStruct* pParams, DummyScript* pScript, 10 14 18 1C 20 24 28 2C 30 34 38 3C
+bool GetMemCardSpaceAvailable_Patched(Script::LazyStruct* pParams, /* ebp + 0x8 */
+										DummyScript* pScript, /* ebp+0xC */
+										uint32_t a, /* ebp+0x10 */
+										ULARGE_INTEGER b, /* ebp+0x14 */
+										ULARGE_INTEGER c, /* ebp+0x1C */
+										ULARGE_INTEGER d, /* ebp+0x24 */
+										ULARGE_INTEGER e, /* ebp+0x2C */
+										ULARGE_INTEGER f, /* epc+0x34 */
+										uint8_t p_card) { /* ebp+0x3C */
+
+	ULARGE_INTEGER mlpFreeBytesAvailableToCaller = {};
+	ULARGE_INTEGER mlpTotalNumberOfBytes = {};
+	uint32_t space_available = (INT_MAX - (UINT16_MAX * 2)); /* stdint.h */;
+	uint32_t space_available_result = 0;
+	uint32_t GetNumFreeClusters_Result = 0;
+
+	pScript->GetParams->AddInteger(0x855b2FC, 1000000); /* FilesLeft */
+
+	if (p_card && GetDiskFreeSpaceExA(NULL, &mlpFreeBytesAvailableToCaller, &mlpTotalNumberOfBytes, NULL)) {
+		space_available_result = ((mlpFreeBytesAvailableToCaller.HighPart << 0x16) + (mlpFreeBytesAvailableToCaller.LowPart >> 0xA));
+		if (space_available_result <= space_available)
+			space_available = space_available_result;
+	}
+	pScript->GetParams->AddInteger(0xC37C363, space_available); /* SpaceAvailable */
+	return true;
+
+	/* GetMemCardSpaceAvailable_Native(pParams, pScript); */
+}
+
+
 
 
 
@@ -233,6 +269,7 @@ void patchScripts() {
 	getconfig(&mScriptsettings);
 
 	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched); /* returns true for the neversoft test skater */
+	patchDWord((void*)0x0067F7D4, (uint32_t)&GetMemCardSpaceAvailable_Patched);
 	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper); /* adjusts scale and position of main menu screen elements in widescreen */
 	patchCall((void*)0x00474F25, LookUpSymbol_Patched); /* accesses the global hash map */
 	//patchCall((void*)0x0046EEA3, ParseQB_Patched); /* loads script files */
@@ -246,15 +283,4 @@ void patchScripts() {
 
 	patchDWord((void*)0x004013D5, 0x0046FE40);
 	patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
-
-
-
-	//	printf("Checksum: 0x%08x\n", checksum);
-	/*
-	THUG2 ParseQB: 0x00472420
-	gamemenu_net 1266B5A0
-	DisableSun: 1266D0C1
-	=>1b21
-	AB FE 51 5C
-	*/
 }

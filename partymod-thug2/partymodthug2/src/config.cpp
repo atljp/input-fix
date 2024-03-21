@@ -337,6 +337,9 @@ void patchStaticValues() {
 	patchNop((void*)0x004B2DC4, 5);
 	patchNop((void*)0x004B3405, 5);
 
+	/* No CAS integrity check */
+	patchNop((void*)0x005A8A01, 2);
+
 	//Patch static values for online play
 	patchBytesM((void*)0x0064CD97, (BYTE*)"\x74\x68\x6D\x6F\x64\x73\x2E\x63\x6F\x6D\x2F\x6D\x6F\x74\x64\x2E\x64\x61\x74\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 65);
 	patchBytesM((void*)0x0064D67A, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
@@ -508,6 +511,18 @@ uint32_t patchButtonLookup(char* p_button) {
 	*/
 }
 
+typedef uint32_t __cdecl unkButtonMap_NativeCall(uint32_t buttonmap);
+unkButtonMap_NativeCall* unkButtonMap_Native = (unkButtonMap_NativeCall*)(0x00479070);
+
+uint32_t patchMetaButtonMap() {
+	if (buttonfont == 2)
+		return unkButtonMap_Native(0x6030A16D); /* meta_button_map_ps2 */
+	else if (buttonfont == 3)
+		return unkButtonMap_Native(0xBAF816FB); /* meta_button_map_xbox */
+	else if (buttonfont == 4)
+		return unkButtonMap_Native(0xEE6CDAC5); /* meta_button_map_gamecube */
+}
+
 void patch_button_font(uint8_t sel)
 {
 	/* 1 = PC (default), 3 = Xbox. Both have the same text: Xbox.buttons_font*/
@@ -519,6 +534,7 @@ void patch_button_font(uint8_t sel)
 
 	if (1 < sel && sel < 5)
 	{
+		patchCall((void*)0x0048D8FC, patchMetaButtonMap);
 		patchByte((void*)(0x004CFF36 + 1), 0x11); 
 		patchByte((void*)0x004CFF38, 0x77); /* jump if above 0x11 */
 

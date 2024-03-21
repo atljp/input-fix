@@ -1270,7 +1270,7 @@ void __stdcall initManager() {
 	}
 	else
 		printf("PS2 Controls disabled\n");
-
+	
 	// Add missing key info: Since we don't use the launcher, no registry values for our keybinds are set.
 	// The game normally loads keybinds found in the registry and stores them at these addresses (starting at 0x007D6794).
 	// This allows to display keybinds set in the launcher in game (e.g., Edit Tricks menu or Freak Out Meter "Press PK_8 to freak out").
@@ -1279,6 +1279,8 @@ void __stdcall initManager() {
 	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind)); //Grind
 	patchKeycode((void*)0x007D67B0, convert_SDL_to_OIS_keycode(keybinds.leftSpin)); //Leftspin, Nollie
 	patchKeycode((void*)0x007D67B4, convert_SDL_to_OIS_keycode(keybinds.rightSpin)); //Rightspin, Revert
+	patchKeycode((void*)0x007D67A8, convert_SDL_to_OIS_keycode(keybinds.caveman));
+	patchKeycode((void*)0x007D67AC, convert_SDL_to_OIS_keycode(keybinds.caveman2));
 
 }
 
