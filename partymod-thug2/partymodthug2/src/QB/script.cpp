@@ -27,20 +27,19 @@ bool CFunc_IsPS2_Patched(void* pParams, DummyScript* pScript) {
 typedef bool __cdecl GetMemCardSpaceAvailable_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 GetMemCardSpaceAvailable_NativeCall* GetMemCardSpaceAvailable_Native = (GetMemCardSpaceAvailable_NativeCall*)(0x005A6E40);
 
-//Script::LazyStruct* pParams, DummyScript* pScript, 10 14 18 1C 20 24 28 2C 30 34 38 3C
 bool GetMemCardSpaceAvailable_Patched(Script::LazyStruct* pParams, /* ebp + 0x8 */
-										DummyScript* pScript, /* ebp+0xC */
-										uint32_t a, /* ebp+0x10 */
-										ULARGE_INTEGER b, /* ebp+0x14 */
-										ULARGE_INTEGER c, /* ebp+0x1C */
-										ULARGE_INTEGER d, /* ebp+0x24 */
-										ULARGE_INTEGER e, /* ebp+0x2C */
-										ULARGE_INTEGER f, /* epc+0x34 */
-										uint8_t p_card) { /* ebp+0x3C */
+									DummyScript* pScript, /* ebp+0xC */
+									uint32_t a, /* ebp+0x10 */
+									ULARGE_INTEGER b, /* ebp+0x14 */
+									ULARGE_INTEGER c, /* ebp+0x1C */
+									ULARGE_INTEGER d, /* ebp+0x24 */
+									ULARGE_INTEGER e, /* ebp+0x2C */
+									ULARGE_INTEGER f, /* epc+0x34 */
+									uint8_t p_card) { /* ebp+0x3C */
 
 	ULARGE_INTEGER mlpFreeBytesAvailableToCaller = {};
 	ULARGE_INTEGER mlpTotalNumberOfBytes = {};
-	uint32_t space_available = (INT_MAX - (UINT16_MAX * 2)); /* stdint.h */;
+	uint32_t space_available = (INT_MAX - (UINT16_MAX * 2)); /* stdint.h */
 	uint32_t space_available_result = 0;
 	uint32_t GetNumFreeClusters_Result = 0;
 
@@ -187,14 +186,18 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 
 void __cdecl loadcustomqb()
 {
-	//unload_script(0x3B4548B8); // enter_kb_chat
+	unload_script(0x3B4548B8); // enter_kb_chat
 	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
-	// 0x30235dfa, checksum in eax
 	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, scriptname, 0x3B4548B8, checksum);
+
+
+
+
+
+	// 0x30235dfa, checksum in eax
 	//sCreateScriptSymbolWrapper(0x3B4548B8, checksum, (const char*)scriptname);
 	//printf("Checksum: 0x%08x\n", checksum);
 
-	
 	// First argument: ecx | second argument: edx | furher arguments pushed onto stack
 	// ecx = 0x9E, edx = *checksum
 	// 
@@ -204,14 +207,14 @@ void __cdecl loadcustomqb()
 	//uint32_t* dummyresult = sCreateScriptSymbol_Native(0x3b4548b8, checksum, (const char)"scripts\\game\\game.qb");
 
 
-	if (mScriptsettings.suninnetgame)
-		unload_script(0x8054f197); /* disablesun */
+	//if (mScriptsettings.suninnetgame)
+	//	unload_script(0x8054f197); /* disablesun */
 }
 
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986
 void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* pScript)
 {
-    DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
+	DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
 	uint32_t p_checksum2 = 0;
 	//Float values are processed according to the IEEE-754 specification
