@@ -139,37 +139,10 @@ void __fastcall removeScript(uint32_t partChecksum) {
 
 const char scriptname[] = "scripts\\game\\game.qb";
 uint32_t __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName) {
-	/*
-	printf("-----------++++++-----------\n");
-	printf("namechecksum:\t0x%08x\n", nameChecksum);
-	printf("contentsChecksum:\t0x%08x\n", contentsChecksum);
-	printf("p_data:\t0x%08x\n", (uint32_t*)p_data);
-	printf("size:\t0x%08x\n", size);
-	printf("p_fileName:\t0x%08x\n", (uint32_t*)p_fileName);
-	*/
-	/* uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum) */
-	/* sCreateScriptSymbol_Native(nameChecksum, contentsChecksum, p_data, size, p_fileName); */
-
-
-
-	/* my:
-	* 
-	* 
-	edx contentsChecksum
-	ecx nameChecksum
-
-	[ebp + 0x10] *p_fileName
-	[ebp + 0xC] size
-	[ebp + 0x8] *p_data
-	[ebp - 0x8] contentsChecksum
-	[ebp - 0xC] nameChecksum
 	
-	*/
 	__asm {
 
 		sub esp, 0xC /* 3 local variables starting from ebp-0x4 */
-		and dword ptr ss : [ebp - 0x4] , 0x0
-
 		mov dword ptr ss : [ebp - 0x8] , edx
 		mov dword ptr ss : [ebp - 0xC] , ecx
 
@@ -180,49 +153,13 @@ uint32_t __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_d
 		mov eax, dword ptr ss : [ebp - 0xC] /* size */
 
 		call dword ptr ds : [0x004013D5]
-		mov dword ptr ss : [ebp - 0x4] , eax
 		add esp, 0xC
-		mov eax, dword ptr ss : [ebp - 0x4]
 
 		pop ebx
 		mov esp, ebp /* compiler doesn't restore esp */
 		pop ebp
 		ret 0x0C
-		
 	}
-	
-/*
-	__asm {
-		//push ebp
-		//mov ebp, esp
-		sub esp, 0x24
-		and dword ptr ss : [ebp - 0x4] , 0x0
-		//push ebx
-		mov dword ptr ss : [ebp - 0x8] , edx
-		mov dword ptr ss : [ebp - 0xC] , ecx
-		push dword ptr ss : [ebp + 0x10] // *p_fileName
-		push dword ptr ss : [ebp + 0xC] // contentsChecksum (0x30235DFA)
-		push dword ptr ss : [ebp + 0x8] // nameChecksum (0x3B4548B8)
-		mov ebx, dword ptr ss : [ebp - 0x8] // *p_data
-		mov eax, dword ptr ss : [ebp - 0xC] // size
-		call dword ptr ds : [0x004013D5]
-		mov dword ptr ss : [ebp - 0x4] , eax
-		add esp, 0xC
-		mov eax, dword ptr ss : [ebp - 0x4]
-		//pop ebx
-		//mov esp, ebp
-		//pop ebp
-		//ret
-	}
-*/
-
-	//printf("%s\n", p_fileName);
-
-	//static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
-	//static uint32_t* addr_scrname = (uint32_t*)&scriptname;
-	//printf("%d, %d", sCreateScriptSymbol_asm, addr_scrname);
-	//sCreateScriptSymbol_Native(size, p_data, p_fileName, nameChecksum, contentsChecksum);
-							/* ecx,  edx,     [esp+8],   <const>,      eax */
 }
 
 
@@ -230,32 +167,10 @@ void __cdecl loadcustomqb()
 {
 	removeScript(0x3B4548B8); // enter_kb_chat
 	uint32_t contentsChecksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
-	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, 0x3B4548B8, contentsChecksum, (const char*)scriptname);
-		
-	printf("Something\n");
-	/* 0x9E, (uint8_t*)&enter_kb_chat_new, scriptname, 0x3B4548B8, checksum); /* 
-	/* uint32_t nameChecksum, uint32_t contentsChecksum, const uint8_t* p_data, uint32_t size, const char* p_fileName */
+	uint32_t scriptSymbol = sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, 0x3B4548B8, contentsChecksum, (const char*)scriptname);
 
-	//call wie cj
-	//	dann ecx und edx in ebp-X moven
-	//	den rest an ebp+X pushen
-
-
-	// 0x30235dfa, checksum in eax
-	//sCreateScriptSymbolWrapper(0x3B4548B8, checksum, (const char*)scriptname);
-	//printf("Checksum: 0x%08x\n", checksum);
-
-	// First argument: ecx | second argument: edx | furher arguments pushed onto stack
-	// ecx = 0x9E, edx = *checksum
-	// 
-	// 
-	//void* sCreateScriptSymbol_Native(0x3B4548B8, checksum, (const char*)scriptname);
-	//CSymbolTableEntry *sCreateScriptSymbol(uint32 nameChecksum, uint32 contentsChecksum, const uint8 *p_data, uint32 size, const char *p_fileName);
-	//uint32_t* dummyresult = sCreateScriptSymbol_Native(0x3b4548b8, checksum, (const char)"scripts\\game\\game.qb");
-
-
-	//if (mScriptsettings.suninnetgame)
-	//	unload_script(0x8054f197); /* disablesun */
+	if (mScriptsettings.suninnetgame)
+		removeScript(0x8054f197); /* disablesun */
 }
 
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986

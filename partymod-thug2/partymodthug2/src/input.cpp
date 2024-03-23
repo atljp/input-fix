@@ -665,7 +665,7 @@ void do_key_input(SDL_KeyCode key) {
 	HKL lang = ::GetKeyboardLayout(0);
 	language = PRIMARYLANGID(lang);
 
-	printf("AAAAAA: %d", key);
+	//printf("KEY: %d", key);
 
 	int32_t key_out = 0;
 	uint8_t modstate = SDL_GetModState();
