@@ -3,6 +3,7 @@
 #include "scriptcontent.h"
 
 struct scriptsettings mScriptsettings;
+uint32_t sCreateScriptSymbol = 0x0046FE40; /* called in asm wrapper */
 
 struct DummyScript
 {
@@ -71,7 +72,7 @@ sCreateScriptSymbol_NativeCall sCreateScriptSymbol_Native = (sCreateScriptSymbol
 typedef void* __cdecl sCreateScriptSymbol_NativeCall(uint32_t nameChecksum, uint32_t contentsChecksum, const uint8_t* p_data, uint32_t size, const char* p_fileName);
 sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall*)(0x0046FE40);
 
-typedef uint32_t __cdecl CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
+typedef uint32_t CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
 CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Native = (CalculateScriptContentsChecksum_NativeCall*)(0x0046F960);
 
 typedef void __cdecl CreateScreenElement_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
@@ -124,50 +125,57 @@ void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertI
 
 
 
-typedef char* __cdecl ScriptGetArray_NativeCall(uint32_t partChecksum);
+typedef uint32_t __cdecl ScriptGetArray_NativeCall(uint32_t partChecksum);
 ScriptGetArray_NativeCall* ScriptGetArray_Native = (ScriptGetArray_NativeCall*)(0x00478CC0);
 
-typedef void __cdecl CleanUpAndRemoveSymbol_NativeCall(const char* p_symbolName);
+typedef uint32_t __cdecl CleanUpAndRemoveSymbol_NativeCall(uint32_t p_symbolName);
 CleanUpAndRemoveSymbol_NativeCall* CleanUpAndRemoveSymbol_Native = (CleanUpAndRemoveSymbol_NativeCall*)(0x004711D0);
 
-void __fastcall removeScript(uint32_t partChecksum) {
-	char *p_script = 0;
+uint32_t __fastcall removeScript(uint32_t partChecksum) {
+	__asm {
+		push ecx
+		mov eax, 0x478CC0
+		CALL eax
+		pop ecx
+		test eax, eax
+		jz $ + 0x09
+		push eax
+		mov eax, 0x4711D0
+		CALL eax
+		pop ecx
+	}
+	/*
+	uint32_t p_script = 0;
 	p_script = ScriptGetArray_Native(partChecksum);
 	if (p_script)	
-		CleanUpAndRemoveSymbol_Native(p_script);
+		p_script = CleanUpAndRemoveSymbol_Native(p_script);
+	return p_script;
+	*/
 }
 
-const char scriptname[] = "scripts\\game\\game.qb";
 uint32_t __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName) {
-	
 	__asm {
-
-		sub esp, 0xC /* 3 local variables starting from ebp-0x4 */
-		mov dword ptr ss : [ebp - 0x8] , edx
-		mov dword ptr ss : [ebp - 0xC] , ecx
-
 		push dword ptr ss : [ebp + 0x10] /* *p_fileName */
 		push dword ptr ss : [ebp + 0xC] /* contentsChecksum */
 		push dword ptr ss : [ebp + 0x8] /* nameChecksum */
-		mov ebx, dword ptr ss : [ebp - 0x8] /* *p_data */
-		mov eax, dword ptr ss : [ebp - 0xC] /* size */
-
-		call dword ptr ds : [0x004013D5]
-		add esp, 0xC
-
-		pop ebx
-		mov esp, ebp /* compiler doesn't restore esp */
+		mov ebx, edx /* *p_data */
+		mov eax, ecx  /* size */
+		call sCreateScriptSymbol
+		mov esp, ebp /* epilogue */
 		pop ebp
 		ret 0x0C
 	}
 }
 
-
-void __cdecl loadcustomqb()
+void __cdecl initScripts()
 {
-	removeScript(0x3B4548B8); // enter_kb_chat
-	uint32_t contentsChecksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
-	uint32_t scriptSymbol = sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, 0x3B4548B8, contentsChecksum, (const char*)scriptname);
+	removeScript(0x3B4548B8);
+	uint32_t contentsChecksum = CalculateScriptContentsChecksum_Native((uint8_t*)enter_kb_chat_new);
+	uint32_t scriptSymbol = sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, 0x3B4548B8, contentsChecksum, "scripts\\game\\game.qb");
+
+	removeScript(0x5C51FEAB);
+	uint32_t contentsChecksum2 = CalculateScriptContentsChecksum_Native((uint8_t*)enablesun_new);
+	uint32_t scriptSymbol2 = sCreateScriptSymbolWrapper(0x2B, (uint8_t*)&enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
 
 	if (mScriptsettings.suninnetgame)
 		removeScript(0x8054f197); /* disablesun */
@@ -245,7 +253,5 @@ void patchScripts() {
 	uint32_t bb = 0xDEADBEEF;
 	printf("0x%08x\n", bb);
 
-
-	patchDWord((void*)0x004013D5, 0x0046FE40);
-	patchJump((void*)0x005A5B32, loadcustomqb); /* loads single functions of scripts and overwrites existing ones */
+	patchJump((void*)0x005A5B32, initScripts); /* loads single functions of scripts and overwrites existing ones */
 }
