@@ -68,7 +68,7 @@ bool GetMemCardSpaceAvailable_Patched(Script::LazyStruct* pParams, /* ebp + 0x8 
 typedef void* (__fastcall* sCreateScriptSymbol_NativeCall)(uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName);
 sCreateScriptSymbol_NativeCall sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall)(0x0046FE40);
 */
-typedef void* __cdecl sCreateScriptSymbol_NativeCall(uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum);
+typedef void* __cdecl sCreateScriptSymbol_NativeCall(uint32_t nameChecksum, uint32_t contentsChecksum, const uint8_t* p_data, uint32_t size, const char* p_fileName);
 sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbol_NativeCall*)(0x0046FE40);
 
 typedef uint32_t __cdecl CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
@@ -81,7 +81,7 @@ typedef uint32_t __cdecl GenerateCRCFromString_NativeCall(char* pName);
 GenerateCRCFromString_NativeCall* GenerateCRCFromString_Native = (GenerateCRCFromString_NativeCall*)(0x00401B90);
 
 typedef uint32_t __cdecl AddChecksumName_NativeCall(uint32_t checksum, char* p_name);
-AddChecksumName_NativeCall* CleanUpAndRemoveSymbol_Native = (AddChecksumName_NativeCall*)(0x0046CF60);
+AddChecksumName_NativeCall* AddChecksumName_Native = (AddChecksumName_NativeCall*)(0x0046CF60);
 
 typedef uint32_t* __cdecl CSymbolTableEntryResolve_NativeCall(uint32_t checksum);
 CSymbolTableEntryResolve_NativeCall* CSymbolTableEntryResolve_Native = (CSymbolTableEntryResolve_NativeCall*)(0x00478CF0);
@@ -124,51 +124,87 @@ void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertI
 
 
 
-typedef uint32_t __fastcall ScriptGetArrayNativeCall(uint32_t param1);
-ScriptGetArrayNativeCall* ScriptGetArrayNative = (ScriptGetArrayNativeCall*)(0x00478CC0);
+typedef char* __cdecl ScriptGetArray_NativeCall(uint32_t partChecksum);
+ScriptGetArray_NativeCall* ScriptGetArray_Native = (ScriptGetArray_NativeCall*)(0x00478CC0);
 
-typedef void __fastcall second_unkNativeCall(uint32_t param1);
-second_unkNativeCall* second_unkNative = (second_unkNativeCall*)(0x004711D0);
+typedef void __cdecl CleanUpAndRemoveSymbol_NativeCall(const char* p_symbolName);
+CleanUpAndRemoveSymbol_NativeCall* CleanUpAndRemoveSymbol_Native = (CleanUpAndRemoveSymbol_NativeCall*)(0x004711D0);
 
-
-void __fastcall unload_script(uint32_t param1) {
-	__asm {
-		push ecx
-		mov eax, 0x478CC0
-		CALL eax
-		pop ecx
-		test eax, eax
-		jz $+0x09
-		push eax
-		mov eax, 0x4711D0
-		CALL eax
-		pop ecx
-	}
+void __fastcall removeScript(uint32_t partChecksum) {
+	char *p_script = 0;
+	p_script = ScriptGetArray_Native(partChecksum);
+	if (p_script)	
+		CleanUpAndRemoveSymbol_Native(p_script);
 }
 
 const char scriptname[] = "scripts\\game\\game.qb";
-void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum) {
-
-
-	//printf("%s\n", p_fileName);
-
-	//static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
-	//static uint32_t* addr_scrname = (uint32_t*)&scriptname;
-	//printf("%d, %d", sCreateScriptSymbol_asm, addr_scrname);
+uint32_t __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName) {
 	/*
+	printf("-----------++++++-----------\n");
+	printf("namechecksum:\t0x%08x\n", nameChecksum);
+	printf("contentsChecksum:\t0x%08x\n", contentsChecksum);
+	printf("p_data:\t0x%08x\n", (uint32_t*)p_data);
+	printf("size:\t0x%08x\n", size);
+	printf("p_fileName:\t0x%08x\n", (uint32_t*)p_fileName);
+	*/
+	/* uint32_t size, const uint8_t* p_data, const char* p_fileName, uint32_t nameChecksum, uint32_t contentsChecksum) */
+	/* sCreateScriptSymbol_Native(nameChecksum, contentsChecksum, p_data, size, p_fileName); */
+
+
+
+	/* my:
+	* 
+	* 
+	edx contentsChecksum
+	ecx nameChecksum
+
+	[ebp + 0x10] *p_fileName
+	[ebp + 0xC] size
+	[ebp + 0x8] *p_data
+	[ebp - 0x8] contentsChecksum
+	[ebp - 0xC] nameChecksum
+	
+	*/
+	__asm {
+
+		sub esp, 0xC /* 3 local variables starting from ebp-0x4 */
+		and dword ptr ss : [ebp - 0x4] , 0x0
+
+		mov dword ptr ss : [ebp - 0x8] , edx
+		mov dword ptr ss : [ebp - 0xC] , ecx
+
+		push dword ptr ss : [ebp + 0x10] /* *p_fileName */
+		push dword ptr ss : [ebp + 0xC] /* contentsChecksum */
+		push dword ptr ss : [ebp + 0x8] /* nameChecksum */
+		mov ebx, dword ptr ss : [ebp - 0x8] /* *p_data */
+		mov eax, dword ptr ss : [ebp - 0xC] /* size */
+
+		call dword ptr ds : [0x004013D5]
+		mov dword ptr ss : [ebp - 0x4] , eax
+		add esp, 0xC
+		mov eax, dword ptr ss : [ebp - 0x4]
+
+		pop ebx
+		mov esp, ebp /* compiler doesn't restore esp */
+		pop ebp
+		ret 0x0C
+		
+	}
+	
+/*
 	__asm {
 		//push ebp
 		//mov ebp, esp
-		sub esp, 0xC
+		sub esp, 0x24
 		and dword ptr ss : [ebp - 0x4] , 0x0
 		//push ebx
 		mov dword ptr ss : [ebp - 0x8] , edx
 		mov dword ptr ss : [ebp - 0xC] , ecx
-		push dword ptr ss : [ebp + 0x10]
-		push dword ptr ss : [ebp + 0xC]
-		push dword ptr ss : [ebp + 0x8]
-		mov ebx, dword ptr ss : [ebp - 0x8]
-		mov eax, dword ptr ss : [ebp - 0xC]
+		push dword ptr ss : [ebp + 0x10] // *p_fileName
+		push dword ptr ss : [ebp + 0xC] // contentsChecksum (0x30235DFA)
+		push dword ptr ss : [ebp + 0x8] // nameChecksum (0x3B4548B8)
+		mov ebx, dword ptr ss : [ebp - 0x8] // *p_data
+		mov eax, dword ptr ss : [ebp - 0xC] // size
 		call dword ptr ds : [0x004013D5]
 		mov dword ptr ss : [ebp - 0x4] , eax
 		add esp, 0xC
@@ -178,7 +214,13 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 		//pop ebp
 		//ret
 	}
-	*/
+*/
+
+	//printf("%s\n", p_fileName);
+
+	//static uint32_t sCreateScriptSymbol_asm = 0x0046FE40;
+	//static uint32_t* addr_scrname = (uint32_t*)&scriptname;
+	//printf("%d, %d", sCreateScriptSymbol_asm, addr_scrname);
 	//sCreateScriptSymbol_Native(size, p_data, p_fileName, nameChecksum, contentsChecksum);
 							/* ecx,  edx,     [esp+8],   <const>,      eax */
 }
@@ -186,12 +228,17 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 
 void __cdecl loadcustomqb()
 {
-	unload_script(0x3B4548B8); // enter_kb_chat
-	uint32_t checksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
-	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, scriptname, 0x3B4548B8, checksum);
+	removeScript(0x3B4548B8); // enter_kb_chat
+	uint32_t contentsChecksum = CalculateScriptContentsChecksum_Native((uint8_t*)&enter_kb_chat_new);
+	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, 0x3B4548B8, contentsChecksum, (const char*)scriptname);
+		
+	printf("Something\n");
+	/* 0x9E, (uint8_t*)&enter_kb_chat_new, scriptname, 0x3B4548B8, checksum); /* 
+	/* uint32_t nameChecksum, uint32_t contentsChecksum, const uint8_t* p_data, uint32_t size, const char* p_fileName */
 
-
-
+	//call wie cj
+	//	dann ecx und edx in ebp-X moven
+	//	den rest an ebp+X pushen
 
 
 	// 0x30235dfa, checksum in eax
