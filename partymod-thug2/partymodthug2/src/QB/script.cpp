@@ -4,6 +4,7 @@
 
 struct scriptsettings mScriptsettings;
 uint32_t sCreateScriptSymbol = 0x0046FE40; /* called in asm wrapper */
+uint32_t sCreateSymbolOfTheFormNameEqualsValue = 0x00472240; /* called in asm wrapper */
 
 struct DummyScript
 {
@@ -81,8 +82,8 @@ CreateScreenElement_NativeCall* CreateScreenElement_Native = (CreateScreenElemen
 typedef void __cdecl SetScreenElementProps_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 SetScreenElementProps_NativeCall* SetScreenElementProps_Native = (SetScreenElementProps_NativeCall*)(0x004AD4C0);
 
-typedef void __cdecl sCreateSymbolOfTheFormNameEqualsValue_NativeCall(uint8_t* p_token, const char* p_fileName, bool assertIfDuplicateSymbols);
-sCreateSymbolOfTheFormNameEqualsValue_NativeCall* sCreateSymbolOfTheFormNameEqualsValue_Native = (sCreateSymbolOfTheFormNameEqualsValue_NativeCall*)(0x472240);
+typedef void __cdecl sCreateSymbolOfTheFormNameEqualsValue_NativeCall(uint8_t* p_token, uint32_t nameChecksum, const char* p_fileName);
+sCreateSymbolOfTheFormNameEqualsValue_NativeCall* sCreateSymbolOfTheFormNameEqualsValue_Native = (sCreateSymbolOfTheFormNameEqualsValue_NativeCall*)(0x00472240);
 
 typedef uint32_t __cdecl GenerateCRCFromString_NativeCall(char* pName);
 GenerateCRCFromString_NativeCall* GenerateCRCFromString_Native = (GenerateCRCFromString_NativeCall*)(0x00401B90);
@@ -169,10 +170,29 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 		push dword ptr ss : [ebp + 0x8] /* nameChecksum */
 		mov ebx, edx /* *p_data */
 		mov eax, ecx  /* size */
-		call sCreateScriptSymbol
+		call dword ptr ds : sCreateScriptSymbol
 		mov esp, ebp /* epilogue */
 		pop ebp
 		ret 0x0C
+	}
+}
+
+
+const char* p_fileName = "scripts\\myan.qb";
+void __fastcall sCreateSymbolOfTheFormNameEqualsValueWrapper() {
+	__asm {
+		push ebp
+		mov ebp, esp
+		and dword ptr ss : [ebp - 0x4] , 0x0
+		mov dword ptr ss : [ebp - 0x8], offset p_fileName /* *p_fileName */
+		mov dword ptr ss : [ebp - 0xC], 0xD2BE4CAF /* nameChecksum */
+		mov dword ptr ss : [ebp - 0x10], offset skateshop_scaling_options_new1 /* *p_data */
+		push dword ptr ss : [ebp - 0x8] /* *p_fileName */
+		push dword ptr ss : [ebp - 0xC] /* nameChecksum */
+		mov ecx, dword ptr ss : [ebp - 0x10] /*p_data */
+		call dword ptr ds : sCreateSymbolOfTheFormNameEqualsValue
+		mov esp, ebp
+		pop ebp
 	}
 }
 
@@ -189,7 +209,7 @@ void __cdecl initScripts()
 	sCreateScriptSymbolWrapper(0x2B, (uint8_t*)enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
 
 	removeScript(0x9f95228A); /* scalingmenu_get_limits */
-	sCreateScriptSymbolWrapper(0x37, (uint8_t*)scalingmenu_get_limits_addition, 0x9F95228A, CalculateScriptContentsChecksum_Native((uint8_t*)scalingmenu_get_limits_original), "scripts\myan.qb");
+	sCreateScriptSymbolWrapper(0x37, (uint8_t*)scalingmenu_get_limits_addition, 0x9F95228A, CalculateScriptContentsChecksum_Native((uint8_t*)scalingmenu_get_limits_original), "scripts\\myan.qb");
 
 	//if (mScriptsettings.suninnetgame)
 	//	removeScript(0x8054f197); /* disablesun */
@@ -201,7 +221,7 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 	DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
 	uint32_t p_checksum2 = 0;
-	//Float values are processed according to the IEEE-754 specification
+	/* float values are processed according to the IEEE - 754 specification */
 
 	if (unkElem->level == 0xE92ECAFE && getaspectratio() > 1.34f) { /* level: load_mainmenu */
 
@@ -246,17 +266,44 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 		}
 	}
 
-	//Call CreateScreenElement with the received parameters
+	/* call CreateScreenElement with the received parameters */
 	CreateScreenElement_Native(pParams, pScript);
 }
 
 void ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
-	//if (removeScript(0xD2BE4CAF))
-	//	printf("SETSCREENELEMENTPROPS REMOVED\n");
-	SetScreenElementProps_Native(pParams, pScript);
+
+	
+
+	DummyUnkElem* unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
+	uint32_t p_checksum = 0;
+
+	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
+
+		if (pScript->mScriptNameChecksum == 0x1B95F333) { /* create_scale_options_menu */
+			pParams->GetChecksum(0x40C698AF, &p_checksum, false); /* id */
+			if (p_checksum == 0x5E430716) { /* scaling_vmenu */
+				removeScript(0xD2BE4CAF); /* skateshop_scaling_options */
+
+				__asm {push ecx}
+				sCreateSymbolOfTheFormNameEqualsValueWrapper(); /* data must not contain newlines but must end with one (token 0x01) returns pointer to last newline token */
+				__asm {pop ecx}
+				printf("MENU REACHED!\n");
+			}		
+		}
+	}
+	/* uint8_t* p_token, const char* p_fileName, bool assertIfDuplicateSymbols) */
+	//sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb");
+	//sCreateSymbolOfTheFormNameEqualsValue_Native((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb");
+		//printf("SETSCREENELEMENTPROPS REMOVED\n");
+	
 
 	/* 0xD2BE4CAF = skateshop_scaling_options */
 	/* scripts/mainmenu/levels/mainmenu/scalingmenu.txt*/
+
+
+
+
+	SetScreenElementProps_Native(pParams, pScript);
 }
 
 void patchScripts() {
@@ -269,11 +316,12 @@ void patchScripts() {
 	patchDWord((void*)0x00680C6C, (uint32_t)&ScriptCreateScreenElementWrapper); /* adjusts scale and position of main menu screen elements in widescreen */
 	patchDWord((void*)0x00680C84, (uint32_t)&ScriptSetScreenElementPropsWrapper);
 	patchCall((void*)0x00474F25, LookUpSymbol_Patched); /* accesses the global hash map */
-	//patchCall((void*)0x0046EEA3, ParseQB_Patched); /* loads script files */
+	
 
 	printf("Initializing CFuncs\n");
 
 	//TEST
+	//patchCall((void*)0x0046EEA3, ParseQB_Patched); /* loads script files */
 	uint32_t bb = 0xDEADBEEF;
 	printf("0x%08x\n", bb);
 
