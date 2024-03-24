@@ -81,6 +81,9 @@ CreateScreenElement_NativeCall* CreateScreenElement_Native = (CreateScreenElemen
 typedef void __cdecl SetScreenElementProps_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 SetScreenElementProps_NativeCall* SetScreenElementProps_Native = (SetScreenElementProps_NativeCall*)(0x004AD4C0);
 
+typedef void __cdecl sCreateSymbolOfTheFormNameEqualsValue_NativeCall(uint8_t* p_token, const char* p_fileName, bool assertIfDuplicateSymbols);
+sCreateSymbolOfTheFormNameEqualsValue_NativeCall* sCreateSymbolOfTheFormNameEqualsValue_Native = (sCreateSymbolOfTheFormNameEqualsValue_NativeCall*)(0x472240);
+
 typedef uint32_t __cdecl GenerateCRCFromString_NativeCall(char* pName);
 GenerateCRCFromString_NativeCall* GenerateCRCFromString_Native = (GenerateCRCFromString_NativeCall*)(0x00401B90);
 
@@ -248,6 +251,8 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 }
 
 void ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
+	//if (removeScript(0xD2BE4CAF))
+	//	printf("SETSCREENELEMENTPROPS REMOVED\n");
 	SetScreenElementProps_Native(pParams, pScript);
 
 	/* 0xD2BE4CAF = skateshop_scaling_options */
@@ -269,7 +274,6 @@ void patchScripts() {
 	printf("Initializing CFuncs\n");
 
 	//TEST
-	//0x472240 = static uint8 *sCreateSymbolOfTheFormNameEqualsValue(uint8 *p_token, const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
 	uint32_t bb = 0xDEADBEEF;
 	printf("0x%08x\n", bb);
 
