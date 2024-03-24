@@ -78,6 +78,9 @@ CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Nati
 typedef void __cdecl CreateScreenElement_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 CreateScreenElement_NativeCall* CreateScreenElement_Native = (CreateScreenElement_NativeCall*)(0x004AD240);
 
+typedef void __cdecl SetScreenElementProps_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
+SetScreenElementProps_NativeCall* SetScreenElementProps_Native = (SetScreenElementProps_NativeCall*)(0x004AD4C0);
+
 typedef uint32_t __cdecl GenerateCRCFromString_NativeCall(char* pName);
 GenerateCRCFromString_NativeCall* GenerateCRCFromString_Native = (GenerateCRCFromString_NativeCall*)(0x00401B90);
 
@@ -93,6 +96,7 @@ LookUpSymbol_NativeCall* LookUpSymbol_Native = (LookUpSymbol_NativeCall*)(0x0047
 
 bool walkspinpatched = false;
 bool boardscuffpatched = false;
+bool a = false;
 void LookUpSymbol_Patched(uint32_t checksum) {
 
 	if (mScriptsettings.airdrift && checksum == 0x1CA80417 && !walkspinpatched) {
@@ -103,7 +107,6 @@ void LookUpSymbol_Patched(uint32_t checksum) {
 		patchDWord((void*)(uint32_t)LookUpSymbol_Native(checksum), 0);
 		boardscuffpatched = true;
 	}
-	
 	LookUpSymbol_Native(checksum);
 }
 
@@ -128,8 +131,10 @@ void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertI
 typedef uint32_t __cdecl ScriptGetArray_NativeCall(uint32_t partChecksum);
 ScriptGetArray_NativeCall* ScriptGetArray_Native = (ScriptGetArray_NativeCall*)(0x00478CC0);
 
-typedef uint32_t __cdecl CleanUpAndRemoveSymbol_NativeCall(uint32_t p_symbolName);
-CleanUpAndRemoveSymbol_NativeCall* CleanUpAndRemoveSymbol_Native = (CleanUpAndRemoveSymbol_NativeCall*)(0x004711D0);
+typedef uint32_t __cdecl ScriptCleanUpAndRemoveSymbol_NativeCall(uint32_t p_symbolName);
+ScriptCleanUpAndRemoveSymbol_NativeCall* ScriptCleanUpAndRemoveSymbol_Native = (ScriptCleanUpAndRemoveSymbol_NativeCall*)(0x004711D0);
+
+
 
 uint32_t __fastcall removeScript(uint32_t partChecksum) {
 	__asm {
@@ -138,22 +143,23 @@ uint32_t __fastcall removeScript(uint32_t partChecksum) {
 		CALL eax
 		pop ecx
 		test eax, eax
-		jz $ + 0x09
+		jz LAB_RET
 		push eax
 		mov eax, 0x4711D0
 		CALL eax
 		pop ecx
+	LAB_RET:
 	}
 	/*
 	uint32_t p_script = 0;
 	p_script = ScriptGetArray_Native(partChecksum);
 	if (p_script)	
-		p_script = CleanUpAndRemoveSymbol_Native(p_script);
+		p_script = ScriptCleanUpAndRemoveSymbol_Native(p_script);
 	return p_script;
 	*/
 }
 
-uint32_t __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName) {
+void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data, uint32_t nameChecksum, uint32_t contentsChecksum, const char* p_fileName) {
 	__asm {
 		push dword ptr ss : [ebp + 0x10] /* *p_fileName */
 		push dword ptr ss : [ebp + 0xC] /* contentsChecksum */
@@ -169,16 +175,21 @@ uint32_t __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_d
 
 void __cdecl initScripts()
 {
-	removeScript(0x3B4548B8);
+	/* qb data in scriptcontent.h */
+
+	removeScript(0x3B4548B8); /* POC */
 	uint32_t contentsChecksum = CalculateScriptContentsChecksum_Native((uint8_t*)enter_kb_chat_new);
-	uint32_t scriptSymbol = sCreateScriptSymbolWrapper(0x9E, (uint8_t*)&enter_kb_chat_new, 0x3B4548B8, contentsChecksum, "scripts\\game\\game.qb");
+	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)enter_kb_chat_new, 0x3B4548B8, contentsChecksum, "scripts\\game\\game.qb");
 
-	removeScript(0x5C51FEAB);
+	removeScript(0x5C51FEAB); /* test */
 	uint32_t contentsChecksum2 = CalculateScriptContentsChecksum_Native((uint8_t*)enablesun_new);
-	uint32_t scriptSymbol2 = sCreateScriptSymbolWrapper(0x2B, (uint8_t*)&enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
+	sCreateScriptSymbolWrapper(0x2B, (uint8_t*)enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
 
-	if (mScriptsettings.suninnetgame)
-		removeScript(0x8054f197); /* disablesun */
+	removeScript(0x9f95228A); /* scalingmenu_get_limits */
+	sCreateScriptSymbolWrapper(0x37, (uint8_t*)scalingmenu_get_limits_addition, 0x9F95228A, CalculateScriptContentsChecksum_Native((uint8_t*)scalingmenu_get_limits_original), "scripts\myan.qb");
+
+	//if (mScriptsettings.suninnetgame)
+	//	removeScript(0x8054f197); /* disablesun */
 }
 
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986
@@ -236,6 +247,13 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 	CreateScreenElement_Native(pParams, pScript);
 }
 
+void ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
+	SetScreenElementProps_Native(pParams, pScript);
+
+	/* 0xD2BE4CAF = skateshop_scaling_options */
+	/* scripts/mainmenu/levels/mainmenu/scalingmenu.txt*/
+}
+
 void patchScripts() {
 
 	/* First, get config from INI. struct defined in config.h */
@@ -243,13 +261,15 @@ void patchScripts() {
 
 	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched); /* returns true for the neversoft test skater */
 	patchDWord((void*)0x0067F7D4, (uint32_t)&GetMemCardSpaceAvailable_Patched);
-	patchDWord((void*)0x00680c6c, (uint32_t)&ScriptCreateScreenElementWrapper); /* adjusts scale and position of main menu screen elements in widescreen */
+	patchDWord((void*)0x00680C6C, (uint32_t)&ScriptCreateScreenElementWrapper); /* adjusts scale and position of main menu screen elements in widescreen */
+	patchDWord((void*)0x00680C84, (uint32_t)&ScriptSetScreenElementPropsWrapper);
 	patchCall((void*)0x00474F25, LookUpSymbol_Patched); /* accesses the global hash map */
 	//patchCall((void*)0x0046EEA3, ParseQB_Patched); /* loads script files */
 
 	printf("Initializing CFuncs\n");
 
 	//TEST
+	//0x472240 = static uint8 *sCreateSymbolOfTheFormNameEqualsValue(uint8 *p_token, const char *p_fileName, EBoolAssertIfDuplicateSymbols assertIfDuplicateSymbols)
 	uint32_t bb = 0xDEADBEEF;
 	printf("0x%08x\n", bb);
 
