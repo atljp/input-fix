@@ -130,15 +130,11 @@ void ParseQB_Patched(const char *p_fileName, uint8_t *p_qb, int ecx, int assertI
 	
 }
 
-
-
 typedef uint32_t __cdecl ScriptGetArray_NativeCall(uint32_t partChecksum);
 ScriptGetArray_NativeCall* ScriptGetArray_Native = (ScriptGetArray_NativeCall*)(0x00478CC0);
 
 typedef uint32_t __cdecl ScriptCleanUpAndRemoveSymbol_NativeCall(uint32_t p_symbolName);
 ScriptCleanUpAndRemoveSymbol_NativeCall* ScriptCleanUpAndRemoveSymbol_Native = (ScriptCleanUpAndRemoveSymbol_NativeCall*)(0x004711D0);
-
-
 
 uint32_t __fastcall removeScript(uint32_t partChecksum) {
 	__asm {
@@ -177,19 +173,18 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 	}
 }
 
-
+/* sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb"); */
 const char* p_fileName = "scripts\\myan.qb";
-void __fastcall sCreateSymbolOfTheFormNameEqualsValueWrapper() {
+void __fastcall loadXYZScales() {
 	__asm {
 		push ebp
 		mov ebp, esp
-		and dword ptr ss : [ebp - 0x4] , 0x0
 		mov dword ptr ss : [ebp - 0x8], offset p_fileName /* *p_fileName */
 		mov dword ptr ss : [ebp - 0xC], 0xD2BE4CAF /* nameChecksum */
-		mov dword ptr ss : [ebp - 0x10], offset skateshop_scaling_options_new1 /* *p_data */
+		mov dword ptr ss : [ebp - 0x10], offset skateshop_scaling_options_new /* *p_data */
 		push dword ptr ss : [ebp - 0x8] /* *p_fileName */
 		push dword ptr ss : [ebp - 0xC] /* nameChecksum */
-		mov ecx, dword ptr ss : [ebp - 0x10] /*p_data */
+		mov ecx, dword ptr ss : [ebp - 0x10] /* *p_data */
 		call dword ptr ds : sCreateSymbolOfTheFormNameEqualsValue
 		mov esp, ebp
 		pop ebp
@@ -208,14 +203,25 @@ void __cdecl initScripts()
 	uint32_t contentsChecksum2 = CalculateScriptContentsChecksum_Native((uint8_t*)enablesun_new);
 	sCreateScriptSymbolWrapper(0x2B, (uint8_t*)enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
 
-	removeScript(0x9f95228A); /* scalingmenu_get_limits */
-	sCreateScriptSymbolWrapper(0x37, (uint8_t*)scalingmenu_get_limits_addition, 0x9F95228A, CalculateScriptContentsChecksum_Native((uint8_t*)scalingmenu_get_limits_original), "scripts\\myan.qb");
+	removeScript(0x9F95228A); /* scalingmenu_get_limits */
+	uint32_t temp = CalculateScriptContentsChecksum_Native((uint8_t*)scalingmenu_get_limits_original);
+	printf("AAAAAAAA: 0x%08x\n", temp);
+	sCreateScriptSymbolWrapper(0x37, (uint8_t*)scalingmenu_get_limits_addition, 0x9F95228A, temp, "scripts\\myan.qb");
+
+	//removeScript(0x1B95F333); /* create_scale_options_menu */
+	//sCreateScriptSymbolWrapper(0x4EC, (uint8_t*)create_scale_options_menu_addition1, 0x1B95F333, 0xFC4A3248, "scripts\\myan.qb");
+
+	uint32_t contentsChecksum3 = CalculateScriptContentsChecksum_Native((uint8_t*)showboardmyan);
+	sCreateScriptSymbolWrapper(0x9C, (uint8_t*)showboardmyan, 0x36150445, contentsChecksum3, "scripts\\myan.qb"); /* new script: showboardmyan 0x36150445 */
+
+	
 
 	//if (mScriptsettings.suninnetgame)
 	//	removeScript(0x8054f197); /* disablesun */
 }
 
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986
+bool board_option_patched = 0;
 void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* pScript)
 {
 	DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
@@ -223,7 +229,14 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 	uint32_t p_checksum2 = 0;
 	/* float values are processed according to the IEEE - 754 specification */
 
-	if (unkElem->level == 0xE92ECAFE && getaspectratio() > 1.34f) { /* level: load_mainmenu */
+	/* moved here (temporarily) because create_cas_modifier_menu doesn't call SetScreenElementProps for some reason */
+	if (pScript->mScriptNameChecksum == 0xE2873769 && !board_option_patched) { /* script: create_cas_modifier_menu */
+		pParams->AddChecksum(0, 0x36150445);
+		RunScript(0x36150445, pScript->GetParams, nullptr);
+		printf("script create_cas_modifier_menu!\n");
+		board_option_patched = true;
+	}
+	else if (unkElem->level == 0xE92ECAFE && getaspectratio() > 1.34f) { /* level: load_mainmenu */
 
 		if (pScript->mScriptNameChecksum == 0x7C92D11A) {  /* script: make_mainmenu_3d_plane */
 
@@ -272,37 +285,32 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 
 void ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
 
-	
-
 	DummyUnkElem* unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
 
 	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
+		/*
+		if (pScript->mScriptNameChecksum == 0xE2873769) { // script: create_cas_modifier_menu
+			pParams->AddChecksum(0, 0xE8438C85);
+			RunScript(0xE8438C85, pScript->GetParams, nullptr);
+			printf("script create_cas_modifier_menu!\n");
+		} else 
+		*/
+		if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
 
-		if (pScript->mScriptNameChecksum == 0x1B95F333) { /* create_scale_options_menu */
 			pParams->GetChecksum(0x40C698AF, &p_checksum, false); /* id */
 			if (p_checksum == 0x5E430716) { /* scaling_vmenu */
 				removeScript(0xD2BE4CAF); /* skateshop_scaling_options */
 
 				__asm {push ecx}
-				sCreateSymbolOfTheFormNameEqualsValueWrapper(); /* data must not contain newlines but must end with one (token 0x01) returns pointer to last newline token */
+				loadXYZScales(); /* data must not contain newlines but must end with one (token 0x01). returns pointer to last newline token */
 				__asm {pop ecx}
-				printf("MENU REACHED!\n");
+				printf("checksum scaling_vmenu!\n");
 			}		
 		}
 	}
-	/* uint8_t* p_token, const char* p_fileName, bool assertIfDuplicateSymbols) */
-	//sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb");
-	//sCreateSymbolOfTheFormNameEqualsValue_Native((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb");
-		//printf("SETSCREENELEMENTPROPS REMOVED\n");
-	
-
 	/* 0xD2BE4CAF = skateshop_scaling_options */
 	/* scripts/mainmenu/levels/mainmenu/scalingmenu.txt*/
-
-
-
-
 	SetScreenElementProps_Native(pParams, pScript);
 }
 

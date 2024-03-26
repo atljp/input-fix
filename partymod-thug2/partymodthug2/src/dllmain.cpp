@@ -27,11 +27,12 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 		// Return FALSE to fail DLL load.
 
 		// install patches
+		patchScripts();
 		initPatch();
+		
 		patchresbuffer();
 		patchWindow();
 		patchInput();
-		patchScripts();
 		break;
 
 	case DLL_THREAD_ATTACH:

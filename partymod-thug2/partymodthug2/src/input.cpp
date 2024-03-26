@@ -407,22 +407,22 @@ bool TextInputInNetGame() {
 	Script::LazyStruct* checkParams = Script::LazyStruct::s_create();
 
 	// id, keyboard_anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0x31631B98);
+	checkParams->AddChecksum(0x40C698AF, 0x31631B98);
 	has_keyboard = ScriptObjectExists_Native(checkParams);
 	checkParams->Clear();
 
 	// id, current_menu_anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0xF53D1D83);
+	checkParams->AddChecksum(0x40C698AF, 0xF53D1D83);
 	has_menu = ScriptObjectExists_Native(checkParams);
 	checkParams->Clear();
 
 	// id, dialog_box_Anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0x3B56E746);
+	checkParams->AddChecksum(0x40C698AF, 0x3B56E746);
 	has_dialog = ScriptObjectExists_Native(checkParams);
 	checkParams->Clear();
 
 	// id, quit_dialog_anchor
-	checkParams->SetChecksumItem(0x40C698AF, 0x4C8BF619);
+	checkParams->AddChecksum(0x40C698AF, 0x4C8BF619);
 	has_quit_dialog = ScriptObjectExists_Native(checkParams);
 
 	Script::LazyStruct::s_free(checkParams);
@@ -440,16 +440,16 @@ void taunt(uint8_t tauntkey) {
 
 		switch (tauntkey) {
 		case 1:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0xE5FD359);	// string_id, props_string
+			checkParams->AddChecksum(0xB53D0E0F, 0xE5FD359);	// string_id, props_string
 			break;
 		case 2:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0xBEEA3518);	// string_id, your_daddy_string
+			checkParams->AddChecksum(0xB53D0E0F, 0xBEEA3518);	// string_id, your_daddy_string
 			break;
 		case 3:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0x4525ADBD);	// string_id, get_some_string
+			checkParams->AddChecksum(0xB53D0E0F, 0x4525ADBD);	// string_id, get_some_string
 			break;
 		case 4:
-			checkParams->SetChecksumItem(0xB53D0E0F, 0xA36DBEE1);	// string_id, no_way_string
+			checkParams->AddChecksum(0xB53D0E0F, 0xA36DBEE1);	// string_id, no_way_string
 			break;
 		default:
 			printf("Invalid taunt\n");

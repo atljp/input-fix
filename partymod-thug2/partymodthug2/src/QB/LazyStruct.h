@@ -56,11 +56,10 @@ namespace Script
 		bool ContainsFlag(uint32_t qbKey);
 
 		void AddFloat(uint32_t nameChecksum, float float_val);
-		void SetChecksumItem(uint32_t qbKey, uint32_t value);
+		
 		void SetStringItem(uint32_t qbKey, char* value);
 		void SetStructItem(uint32_t qbKey, LazyStruct* value); // Sets item that already exists!
 		void SetArrayItem(uint32_t qbKey, void* value);
-
 		void RedefineArrayItem(uint32_t qbKey, void* value); // Redefine an existing array item
 
 		int GetInteger(uint32_t qbKey);
@@ -68,12 +67,12 @@ namespace Script
 		bool GetChecksum(uint32_t checksum, uint32_t* p_checksum, bool assert);
 		void AddInteger(uint32_t checksum, uint32_t value);
 		void AddPair(uint32_t nameChecksum, float x, float y);
+		void AddChecksum(uint32_t qbKey, uint32_t value);
+		void* AppendStructure(const LazyStruct* append_from);
+		void AddArrayPointer(uint32_t id, void* arr);
 
 		void* GetArray(uint32_t qbKey);
 		char* GetString(uint32_t qbKey);
 		LazyStruct* GetStruct(uint32_t qbKey);
-
-		void* AppendStructure(LazyStruct* append_from);
-		void AddArrayPointer(uint32_t id, void* arr);
 	};
 }

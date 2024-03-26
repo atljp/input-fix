@@ -162,15 +162,6 @@ namespace Script {
 	// Contains a flag?
 	bool LazyStruct::ContainsFlag(uint32_t qbKey) { return ContainsFlag_Native(this, qbKey); }
 
-
-	typedef void __fastcall AddChecksumCall(LazyStruct* struc, int edx, uint32_t qbKey, uint32_t value);
-	AddChecksumCall* AddChecksum = (AddChecksumCall*)(0x00477D40); //Thug2 address
-
-	void LazyStruct::SetChecksumItem(uint32_t qbKey, uint32_t value)
-	{
-		AddChecksum(this, 0, qbKey, value);
-	}
-
 	typedef void __fastcall AddStringCall(LazyStruct* struc, int edx, uint32_t qbKey, char* value);
 	AddStringCall* AddString = (AddStringCall*)(0x004779D0); //Thug2 address
 
@@ -266,7 +257,7 @@ namespace Script {
 	}
 
 	//---------------------------------------
-	// Add vector
+	// Add pair
 	//---------------------------------------
 	
 	typedef void(__thiscall* AddPair_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, float x, float y);
@@ -277,6 +268,41 @@ namespace Script {
 		AddPair_Native(this, nameChecksum, x, y);
 	}
 
+	//---------------------------------------
+	// Add checksum
+	//---------------------------------------
+
+	typedef void (__thiscall* AddChecksum_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, uint32_t checksum);
+	AddChecksum_NativeCall AddChecksum_Native = (AddChecksum_NativeCall)(0x00477D40); //Thug2 address
+
+	void LazyStruct::AddChecksum(uint32_t nameChecksum, uint32_t checksum)
+	{
+		AddChecksum_Native(this, nameChecksum, checksum);
+	}
+
+	//---------------------------------------
+	// Append data from another structure. (__thiscall)
+	//---------------------------------------
+
+	typedef void (__thiscall* AppendStructure_NativeCall)(LazyStruct* struc, const LazyStruct *p_struct);
+	AppendStructure_NativeCall AppendStructure_Native = (AppendStructure_NativeCall)(0x00478540); //Thug2 address
+
+	void* LazyStruct::AppendStructure(const LazyStruct *p_struct)
+	{
+		AppendStructure_Native(this, p_struct);
+	}
+
+	//---------------------------------------
+	// Add pointer to an array.  (__thiscall)
+	//---------------------------------------
+
+	typedef void (__thiscall* AddArrayPointer_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, void *p_array);
+	AddArrayPointer_NativeCall AddArrayPointer_Native = (AddArrayPointer_NativeCall)(0x004780D0); //Thug2 address
+
+	void LazyStruct::AddArrayPointer(uint32_t nameChecksum, void *p_array)
+	{
+		AddArrayPointer_Native(this, nameChecksum, p_array);
+	}
 
 	//---------------------------------------
 	// Get array item
@@ -316,30 +342,6 @@ namespace Script {
 			return nullptr;
 
 		return (LazyStruct*)item->value;
-	}
-
-	//---------------------------------------
-	// Append data from another structure. (__thiscall)
-	//---------------------------------------
-
-	typedef void* __fastcall AppendStructure_NativeCall(LazyStruct* struc, LazyStruct* append_from);
-	AppendStructure_NativeCall* AppendStructure_Native = (AppendStructure_NativeCall*)(0x00478540); //Thug2 address
-
-	void* LazyStruct::AppendStructure(LazyStruct* append_from)
-	{
-		return AppendStructure_Native(this, append_from);
-	}
-
-	//---------------------------------------
-	// Add pointer to an array.  (__thiscall)
-	//---------------------------------------
-
-	typedef void __fastcall AddArrayPointer_NativeCall(LazyStruct* struc, uint32_t id, void* arr);
-	AddArrayPointer_NativeCall* AddArrayPointer_Native = (AddArrayPointer_NativeCall*)(0x004780D0); //Thug2 address
-
-	void LazyStruct::AddArrayPointer(uint32_t id, void* arr)
-	{
-		AddArrayPointer_Native(this, id, arr);
 	}
 
 }
