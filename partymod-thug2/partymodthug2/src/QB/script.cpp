@@ -173,7 +173,7 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 	}
 }
 
-/* sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb"); */
+/* sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb"); 0xD2BE4CAF = skateshop_scaling_options */
 const char* p_fileName = "scripts\\myan.qb";
 void __fastcall loadXYZScales() {
 	__asm {
@@ -282,12 +282,17 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
 
 		if (pScript->mScriptNameChecksum == 0xE2873769) { // script: create_cas_modifier_menu
+
 			pParams->AddChecksum(0, 0x36150445);
 			RunScript(0x36150445, pScript->GetParams, nullptr);
 			printf("script: create_cas_modifier_menu!\n");
+
 		} else if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
+
 			pParams->GetChecksum(0x40C698AF, &p_checksum, false); /* id */
+
 			if (p_checksum == 0x5E430716) { /* scaling_vmenu */
+
 				removeScript(0xD2BE4CAF); /* skateshop_scaling_options */
 				__asm {push ecx}
 				loadXYZScales(); /* data must not contain newlines but must end with one (token 0x01). returns pointer to last newline token */
@@ -296,7 +301,7 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 			}		
 		}
 	}
-	/* 0xD2BE4CAF = skateshop_scaling_options */
+	
 	/* scripts/mainmenu/levels/mainmenu/scalingmenu.txt*/
 	return SetScreenElementProps_Native(pParams, pScript);
 }

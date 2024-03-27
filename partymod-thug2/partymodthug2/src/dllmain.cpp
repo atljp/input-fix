@@ -27,8 +27,8 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 		// Return FALSE to fail DLL load.
 
 		// install patches
-		patchScripts();
 		initPatch();
+		patchScripts();
 		patchresbuffer();
 		patchWindow();
 		patchInput();
