@@ -29,7 +29,6 @@ __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, L
 		// install patches
 		patchScripts();
 		initPatch();
-		
 		patchresbuffer();
 		patchWindow();
 		patchInput();

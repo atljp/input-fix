@@ -76,10 +76,10 @@ sCreateScriptSymbol_NativeCall* sCreateScriptSymbol_Native = (sCreateScriptSymbo
 typedef uint32_t CalculateScriptContentsChecksum_NativeCall(uint8_t* p_token);
 CalculateScriptContentsChecksum_NativeCall* CalculateScriptContentsChecksum_Native = (CalculateScriptContentsChecksum_NativeCall*)(0x0046F960);
 
-typedef void __cdecl CreateScreenElement_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
+typedef bool __cdecl CreateScreenElement_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 CreateScreenElement_NativeCall* CreateScreenElement_Native = (CreateScreenElement_NativeCall*)(0x004AD240);
 
-typedef void __cdecl SetScreenElementProps_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
+typedef bool __cdecl SetScreenElementProps_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
 SetScreenElementProps_NativeCall* SetScreenElementProps_Native = (SetScreenElementProps_NativeCall*)(0x004AD4C0);
 
 typedef void __cdecl sCreateSymbolOfTheFormNameEqualsValue_NativeCall(uint8_t* p_token, uint32_t nameChecksum, const char* p_fileName);
@@ -221,22 +221,14 @@ void __cdecl initScripts()
 }
 
 //https://github.com/thug1src/thug/blob/d8eb7147663d28c5cff3249a6df7d98e692741cb/Code/Gfx/2D/ScreenElemMan.cpp#L986
-bool board_option_patched = 0;
-void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* pScript)
+bool ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* pScript)
 {
 	DummyUnkElem *unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
 	uint32_t p_checksum2 = 0;
 	/* float values are processed according to the IEEE - 754 specification */
 
-	/* moved here (temporarily) because create_cas_modifier_menu doesn't call SetScreenElementProps for some reason */
-	if (pScript->mScriptNameChecksum == 0xE2873769 && !board_option_patched) { /* script: create_cas_modifier_menu */
-		pParams->AddChecksum(0, 0x36150445);
-		RunScript(0x36150445, pScript->GetParams, nullptr);
-		printf("script create_cas_modifier_menu!\n");
-		board_option_patched = true;
-	}
-	else if (unkElem->level == 0xE92ECAFE && getaspectratio() > 1.34f) { /* level: load_mainmenu */
+	if (unkElem->level == 0xE92ECAFE && getaspectratio() > 1.34f) { /* level: load_mainmenu */
 
 		if (pScript->mScriptNameChecksum == 0x7C92D11A) {  /* script: make_mainmenu_3d_plane */
 
@@ -261,7 +253,7 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 				}
 			}
 		}
-		else if (pScript->mScriptNameChecksum = 0x59F6E121) { /* script: make_spin_menu */
+		else if (pScript->mScriptNameChecksum == 0x59F6E121) { /* script: make_spin_menu */
 
 			pParams->GetChecksum(0x7321A8D6, &p_checksum, false); /* type */
 			pParams->GetChecksum(0x40C698AF, &p_checksum2, false); /* id */
@@ -278,30 +270,25 @@ void ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 			}
 		}
 	}
-
 	/* call CreateScreenElement with the received parameters */
-	CreateScreenElement_Native(pParams, pScript);
+	return CreateScreenElement_Native(pParams, pScript);
 }
 
-void ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
+bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
 
 	DummyUnkElem* unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
 
 	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
-		/*
-		if (pScript->mScriptNameChecksum == 0xE2873769) { // script: create_cas_modifier_menu
-			pParams->AddChecksum(0, 0xE8438C85);
-			RunScript(0xE8438C85, pScript->GetParams, nullptr);
-			printf("script create_cas_modifier_menu!\n");
-		} else 
-		*/
-		if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
 
+		if (pScript->mScriptNameChecksum == 0xE2873769) { // script: create_cas_modifier_menu
+			pParams->AddChecksum(0, 0x36150445);
+			RunScript(0x36150445, pScript->GetParams, nullptr);
+			printf("script: create_cas_modifier_menu!\n");
+		} else if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
 			pParams->GetChecksum(0x40C698AF, &p_checksum, false); /* id */
 			if (p_checksum == 0x5E430716) { /* scaling_vmenu */
 				removeScript(0xD2BE4CAF); /* skateshop_scaling_options */
-
 				__asm {push ecx}
 				loadXYZScales(); /* data must not contain newlines but must end with one (token 0x01). returns pointer to last newline token */
 				__asm {pop ecx}
@@ -311,7 +298,7 @@ void ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 	}
 	/* 0xD2BE4CAF = skateshop_scaling_options */
 	/* scripts/mainmenu/levels/mainmenu/scalingmenu.txt*/
-	SetScreenElementProps_Native(pParams, pScript);
+	return SetScreenElementProps_Native(pParams, pScript);
 }
 
 void patchScripts() {
