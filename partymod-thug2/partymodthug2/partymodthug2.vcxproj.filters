@@ -39,6 +39,9 @@
     <ClCompile Include="src\displayconfig.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\Logger\Logger.cpp">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\global.h">
@@ -59,9 +62,6 @@
     <ClInclude Include="src\QB\LazyStruct.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="src\Log\Logger.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="src\QB\malloc.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -75,6 +75,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\displayconfig.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Logger\Logger.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

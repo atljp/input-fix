@@ -260,7 +260,7 @@ namespace Script {
 	// Add pair
 	//---------------------------------------
 	
-	typedef void(__thiscall* AddPair_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, float x, float y);
+	typedef void (__thiscall* AddPair_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, float x, float y);
 	AddPair_NativeCall AddPair_Native = (AddPair_NativeCall)(0x00477FC0); //Thug2 address
 
 	void LazyStruct::AddPair(uint32_t nameChecksum, float x, float y)
@@ -281,7 +281,7 @@ namespace Script {
 	}
 
 	//---------------------------------------
-	// Append data from another structure. (__thiscall)
+	// Append data from another structure
 	//---------------------------------------
 
 	typedef void (__thiscall* AppendStructure_NativeCall)(LazyStruct* struc, const LazyStruct *p_struct);
@@ -293,7 +293,7 @@ namespace Script {
 	}
 
 	//---------------------------------------
-	// Add pointer to an array.  (__thiscall)
+	// Add pointer to an array
 	//---------------------------------------
 
 	typedef void (__thiscall* AddArrayPointer_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, void *p_array);
