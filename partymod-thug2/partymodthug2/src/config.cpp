@@ -1,12 +1,13 @@
 #include <config.h>
 #include <QB/LazyStruct.h>
+#include <Logger/Logger.h>
 
 #define GRAPHICS_SECTION "Graphics"
 #define KEYBIND_SECTION "Keybinds"
 #define CONTROLLER_SECTION "Gamepad"
 
 #define VERSION_NUMBER_MAJOR 0
-#define VERSION_NUMBER_MINOR 3
+#define VERSION_NUMBER_MINOR 4
 
 char* executableDirectory[MAX_PATH];
 
@@ -193,7 +194,7 @@ void initPatch() {
 
 
 	/* Read INI config values*/
-	console = getIniBool("Miscellaneous", "Console", 0, configFile);
+	console = GetPrivateProfileInt("Miscellaneous", "Console", 0, configFile);
 	language = GetPrivateProfileInt("Miscellaneous", "Language", 1, configFile);
 	buttonfont = GetPrivateProfileInt("Miscellaneous", "ButtonFont", 1, configFile);
 	intromovies = getIniBool("Miscellaneous", "IntroMovies", 1, configFile);
@@ -214,18 +215,17 @@ void initPatch() {
 
 	/* Allocate console */
 	if (console) {
-		AllocConsole();
-
-		FILE* fDummy;
-		freopen_s(&fDummy, "CONIN$", "r", stdin);
-		freopen_s(&fDummy, "CONOUT$", "w", stderr);
-		freopen_s(&fDummy, "CONOUT$", "w", stdout);
+		Log::Initialize();
+		patchDWord((void*)0x0067F3D4, (uint32_t)&Log::CFunc_PrintF);
+		if (console == 2)
+			patchJump((void*)0x00401C30, &Log::PrintLog);
 	}
 	printf("PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
 	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
 	printf("Patch initialized\n");
 	printf("Initializing INI settings\n");
 	printf("---------------------------------------------------------\n");
+	Log::TypedLog(CHN_DLL, "partymod.dll is working!\n");
 
 
 	/* Set language */

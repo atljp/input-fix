@@ -26,7 +26,7 @@ namespace Log {
 		//if (GameConfig::GetValue("Logger", "Console", 0))
 			l_UseConsole = true;
 		//if (GameConfig::GetValue("Logger", "WriteFile", 1))
-			l_DebugOutput = true;
+			l_DebugOutput = false;
 
 		//l_ExitOnAssert = GameConfig::GetValue("Logger", "ExitOnAssert", 1);
 
@@ -34,6 +34,7 @@ namespace Log {
 		if (l_UseConsole)
 		{
 			AllocConsole();
+			SetConsoleTitle("THUG2 CONSOLE WINDOW");
 			freopen_s(&CON, "CONIN$", "r", stdin);
 			freopen_s(&CON, "CONOUT$", "w", stdout);
 			freopen_s(&CON, "CONOUT$", "w", stderr);
@@ -112,28 +113,27 @@ namespace Log {
 	// Format string from pParams (built-in function)
 	//------------------------
 
-	typedef bool StringFromParamCall(char* print_dest, Script::LazyStruct* pParams);
+	typedef bool StringFromParamCall(char* print_dest, Script::LazyStruct* pParams, void* pScript);
 	StringFromParamCall* s_from_params = (StringFromParamCall*)(0x0044C840); //THUG2
 
-	void StringFromParams(char* print_dest, Script::LazyStruct* pParams)
+	void StringFromParams(char* print_dest, Script::LazyStruct* pParams,void* pScript)
 	{
-		s_from_params(print_dest, pParams);
+		s_from_params(print_dest, pParams, pScript);
 	}
 
 	//------------------------
 	// Function to replace plain PrintF!
 	//------------------------
 
-	bool CFunc_PrintF(Script::LazyStruct* pParams)
+	bool CFunc_PrintF(Script::LazyStruct* pParams, void* pScript)
 	{
-		char buf[2048];
-		StringFromParams(buf, pParams);
+		char buf[1024];
+		StringFromParams(buf, pParams, pScript);
 
 		TypedLog(CHN_LOG, "%s", buf);
 
 		return 1;
 	}
 
-	//CFuncs::RedirectFunction("PrintF", (void*)CFunc_PrintF);
 
 }
