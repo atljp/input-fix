@@ -220,12 +220,12 @@ void initPatch() {
 		if (console == 2)
 			patchJump((void*)0x00401C30, &Log::PrintLog);
 	}
-	printf("PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
-	printf("DIRECTORY: %s\n", (LPSTR)executableDirectory);
-	printf("Patch initialized\n");
-	printf("Initializing INI settings\n");
-	printf("---------------------------------------------------------\n");
-	Log::TypedLog(CHN_DLL, "partymod.dll is working!\n");
+	Log::TypedLog(CHN_DLL, "PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
+	Log::TypedLog(CHN_DLL, "DIRECTORY: %s\n", (LPSTR)executableDirectory);
+	Log::TypedLog(CHN_DLL, "Patch initialized\n");
+	Log::TypedLog(CHN_DLL, "Initializing INI settings\n");
+	Log::TypedLog(CHN_DLL, "---------------------------------------------------------\n");
+	
 
 
 	/* Set language */
@@ -242,21 +242,21 @@ void initPatch() {
 
 	patchByte((void*)(ADDR_LanguageFlag + 0x8), 0x07);	//Load and save savegames from multiple language settings
 	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
-	printf("Loading language setting: %s\n", (language == 1) ? "English" : ((language == 2) ? "French" : ((language == 3) ? "German" : "English")));
+	Log::TypedLog(CHN_DLL, "Loading language setting: %s\n", (language == 1) ? "English" : ((language == 2) ? "French" : ((language == 3) ? "German" : "English")));
 
 
 	/* Set button font */
 	patch_button_font(buttonfont);
 	if (buttonfont > 1)
-		printf("Loading button font: %s\n", (buttonfont == 2) ? "Ps2" : ((buttonfont == 3) ? "Xbox" : ((buttonfont == 4) ? "NGC" : "PC")));
+		Log::TypedLog(CHN_DLL, "Loading button font: %s\n", (buttonfont == 2) ? "Ps2" : ((buttonfont == 3) ? "Xbox" : ((buttonfont == 4) ? "NGC" : "PC")));
 	else
-		printf("Loading button font: PC\n");
+		Log::TypedLog(CHN_DLL, "Loading button font: PC\n");
 
 
 	/* Toggle intro movies */
 	if (!intromovies)
 		patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
-	printf("Intro movies: %s\n", intromovies ? "Enabled" : "Disabled");
+	Log::TypedLog(CHN_DLL, "Intro movies: %s\n", intromovies ? "Enabled" : "Disabled");
 
 
 	/* Set THUG airdrift */
@@ -266,7 +266,7 @@ void initPatch() {
 		patchNop((void*)ADDR_AirDrift, 8);
 		/* Walkspin is disabled in script.cpp */
 	}
-	printf("Airdrift: %s\n", airdrift ? "Enabled" : "Disabled");
+	Log::TypedLog(CHN_DLL, "Airdrift: %s\n", airdrift ? "Enabled" : "Disabled");
 
 
 	/* Set spindelay. Off is Ps2 default, on is PC default (value = 100) */
@@ -275,22 +275,22 @@ void initPatch() {
 		patchNop((void*)ADDR_SpinLagL, 2);
 		patchNop((void*)ADDR_SpinLagR, 2);
 	}
-	printf("Spindelay: %s\n", spindelay ? "Enabled (PC default)" : "Disabled (Ps2 default)");
+	Log::TypedLog(CHN_DLL, "Spindelay: %s\n", spindelay ? "Enabled (PC default)" : "Disabled (Ps2 default)");
 
 
 	/* Graphic settings */
-	printf("Graphic settings - Fullscreen Anti-Aliasing: %s\n", graphics_settings.antialiasing ? "Enabled" : "Disabled");
-	printf("Graphic settings - HQ Shadows: %s\n", graphics_settings.hqshadows ? "Enabled" : "Disabled");
-	printf("Graphic settings - Distance Clipping: %s\n", graphics_settings.distanceclipping ? "Enabled" : "Disabled");
+	Log::TypedLog(CHN_DLL, "Graphic settings - Fullscreen Anti-Aliasing: %s\n", graphics_settings.antialiasing ? "Enabled" : "Disabled");
+	Log::TypedLog(CHN_DLL, "Graphic settings - HQ Shadows: %s\n", graphics_settings.hqshadows ? "Enabled" : "Disabled");
+	Log::TypedLog(CHN_DLL, "Graphic settings - Distance Clipping: %s\n", graphics_settings.distanceclipping ? "Enabled" : "Disabled");
 	if (graphics_settings.distanceclipping) {
-		printf("Graphic settings - Clipping Distance: %d\n", graphics_settings.clippingdistance);
-		printf("Graphic settings - Fog: %s\n", graphics_settings.fog ? "Enabled" : "Disabled");
+		Log::TypedLog(CHN_DLL, "Graphic settings - Clipping Distance: %d\n", graphics_settings.clippingdistance);
+		Log::TypedLog(CHN_DLL, "Graphic settings - Fog: %s\n", graphics_settings.fog ? "Enabled" : "Disabled");
 	}
-	printf("Graphic settings - Resolution from INI: %d x %d\n", resX, resY);
-	printf("Graphic settings - Window mode: %s \n", (isWindowed && !isBorderless) ? "Enabled (default)" : ((isWindowed && isBorderless) ? "Enabled (borderless)" : "Disabled"));
+	Log::TypedLog(CHN_DLL, "Graphic settings - Resolution from INI: %d x %d\n", resX, resY);
+	Log::TypedLog(CHN_DLL, "Graphic settings - Window mode: %s \n", (isWindowed && !isBorderless) ? "Enabled (default)" : ((isWindowed && isBorderless) ? "Enabled (borderless)" : "Disabled"));
 
-	printf("---------------------------------------------------------\n");
-	printf("Finished initializing INI settings\n");
+	Log::TypedLog(CHN_DLL, "---------------------------------------------------------\n");
+	Log::TypedLog(CHN_DLL, "Finished initializing INI settings\n");
 }
 
 void patchStaticValues() {
