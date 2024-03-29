@@ -38,125 +38,6 @@ ButtonLookup_NativeCall* ButtonLookup_Native = (ButtonLookup_NativeCall*)(0x0040
 typedef uint32_t __cdecl unkButtonMap_NativeCall(uint32_t buttonmap);
 unkButtonMap_NativeCall* unkButtonMap_Native = (unkButtonMap_NativeCall*)(0x00479070);
 
-void enforceMaxResolution() {
-
-	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */
-	defHeight = GetSystemMetrics(SM_CYSCREEN);	/* The height of the screen of the primary display monitor, in pixels.  */
-
-	uint8_t isValidX = 0;
-	uint8_t isValidY = 0;
-
-	if (defWidth >= resX)
-		isValidX = 1;
-	if (defHeight >= resY)
-		isValidY = 1;
-
-	if (!isValidX || !isValidY) {
-		resX = 0;
-		resY = 0;
-	}
-}
-
-void createSDLWindow()
-{
-	SDL_Init(SDL_INIT_VIDEO);
-	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
-
-	if (isWindowed && isBorderless) {
-		flags |= SDL_WINDOW_BORDERLESS;
-	}
-
-	enforceMaxResolution();
-	if (resX == 0 || resY == 0) {
-		resX = defWidth;
-		resY = defHeight;
-	}
-
-	if (resX < 640 || resY < 480) {
-		resX = 640;
-		resY = 480;
-	}
-
-	Log::TypedLog(CHN_DLL, "Setting resolution: %d x %d\n", resX, resY);
-	Log::TypedLog(CHN_DLL, "Aspect ratio:%f\n", getaspectratio());
-
-	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: move / resize borderless window
-	SDL_SetWindowResizable(window, SDL_TRUE);
-
-	if (!window)
-		Log::TypedLog(CHN_SDL, "Failed to create window! Error: %s\n", SDL_GetError());
-	else
-		Log::TypedLog(CHN_SDL, "Window successfully created!\n");
-
-	SDL_SysWMinfo wmInfo;
-	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(window, &wmInfo);
-	*hwnd = wmInfo.info.win.window;
-
-	*(int*)ADDR_IsFocused = 1;
-
-	//DirectX9: D3DPRESENTPARAMS
-	if (isWindowed)
-	{
-		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); //Windowed = 1
-		SDL_ShowCursor(1);
-	}
-	else
-	{
-		SDL_ShowCursor(0);
-	}
-
-	/* patch resolution of the window */
-	patchDWord((void*)ADDR_WindowResoltionX, resX);
-	patchDWord((void*)ADDR_WindowResoltionY, resY);
-
-	/* set aspect ratio and FOV */
-	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
-	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
-}
-
-
-void writeConfigValues()
-{
-	*antialiasing = graphics_settings.antialiasing;
-	if (graphics_settings.hqshadows)
-	{
-		*hq_shadows = graphics_settings.hqshadows;
-		patchByte((void*)(0x004A19E5 + 2), 0x04); /* very high shadow quality */
-		patchByte((void*)(0x004A19EA + 2), 0x04);
-	}
-	*distance_clipping = graphics_settings.distanceclipping;
-	*fog = graphics_settings.fog;
-
-	uint32_t distance = graphics_settings.clippingdistance;
-	uint32_t distance2 = 1;
-
-	if (distance > 100)
-		distance = 100;
-	else if (distance < 2)
-	{
-		distance = 1;
-		distance2 = 0;
-	}
-	*clipping_distance = distance;
-	*clipping_distance2 = distance * 5.0 + 95.0;
-
-	Log::TypedLog(CHN_DLL, "Setting launcher settings\n");
-}
-
-
-void patchWindow() {
-	// replace the window with an SDL2 window.  this kind of straddles the line between input and config
-	patchCall((void*)ADDR_FUNC_CreateWindow, &createSDLWindow);
-	patchByte((void*)(ADDR_FUNC_CreateWindow + 5), 0xC3);
-	
-	patchNop((void*)ADDR_FixWindowPos, 14);	// don't move window to corner
-
-	//Don't load launcher settings from registry, use our own ini values instead
-	patchCall((void*)0x005F4591, writeConfigValues);
-}
-
-
 void initPatch() {
 
 	/* First, patch static values into the exe */
@@ -335,6 +216,135 @@ void patchStaticValues() {
 	patchCall((void*)0x004523A7, &Rnd_fixed);
 	patchCall((void*)0x004523B4, &Rnd_fixed);
 	patchCall((void*)0x004523F6, &Rnd_fixed);
+}
+
+void patchWindow() {
+	// replace the window with an SDL2 window.  this kind of straddles the line between input and config
+	patchCall((void*)ADDR_FUNC_CreateWindow, &createSDLWindow);
+	patchByte((void*)(ADDR_FUNC_CreateWindow + 5), 0xC3);
+
+	patchNop((void*)ADDR_FixWindowPos, 14);	// don't move window to corner
+
+	//Don't load launcher settings from registry, use our own ini values instead
+	patchCall((void*)0x005F4591, writeConfigValues);
+}
+
+
+void enforceMaxResolution() {
+
+	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */
+	defHeight = GetSystemMetrics(SM_CYSCREEN);	/* The height of the screen of the primary display monitor, in pixels.  */
+
+	uint8_t isValidX = 0;
+	uint8_t isValidY = 0;
+	DEVMODE deviceMode = {};
+	int i = 0;
+
+	if (!isWindowed) {
+		while (EnumDisplaySettings(NULL, i, &deviceMode)) {
+			if (deviceMode.dmPelsWidth == resX) {
+				isValidX = 1;
+			}
+			if (deviceMode.dmPelsHeight == resY) {
+				isValidY = 1;
+			}
+			i++;
+		}
+		if (!isValidX || !isValidY) {
+			resX = 0;
+			resY = 0;
+		}
+	}
+	else if (resX > defWidth || resY > defHeight) {
+		resX = 0;
+		resY = 0;
+	}
+}
+
+void createSDLWindow() {
+	SDL_Init(SDL_INIT_VIDEO);
+	uint32_t flags = isWindowed ? (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE) : SDL_WINDOW_FULLSCREEN;
+
+	if (isWindowed && isBorderless) {
+		flags |= SDL_WINDOW_BORDERLESS;
+	}
+
+	/* Fullscreen mode: Sets resX and resY to 0 if the resolution from INI is not supported on the device. Window mode: Sets resX and resY to 0 if the resoltion from INI is bigger than the max supported one */
+	enforceMaxResolution();
+
+	if (resX == 0 || resY == 0) {
+		resX = defWidth;
+		resY = defHeight;
+		Log::TypedLog(CHN_DLL, "Found invalid resolution. Falling back to: %d x %d\n", defWidth, defHeight);
+	}
+	else if (resX < 640 || resY < 480) {
+		resX = 640;
+		resY = 480;
+		Log::TypedLog(CHN_DLL, "Found invalid resolution. Falling back to: %d x %d\n", resX, resY);
+	}
+	else {
+		Log::TypedLog(CHN_DLL, "Setting resolution: %d x %d\n", resX, resY);
+	}
+
+	Log::TypedLog(CHN_DLL, "Aspect ratio:%f\n", getaspectratio());
+
+	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: move / resize borderless window
+	SDL_SetWindowResizable(window, SDL_TRUE);
+
+	if (!window)
+		Log::TypedLog(CHN_SDL, "Failed to create window! Error: %s\n", SDL_GetError());
+	else
+		Log::TypedLog(CHN_SDL, "Window successfully created!\n");
+
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+	*hwnd = wmInfo.info.win.window;
+	*(int*)ADDR_IsFocused = 1;
+
+	//DirectX9: D3DPRESENTPARAMS
+	if (isWindowed) {
+		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); //Windowed = 1
+		SDL_ShowCursor(1);
+	}
+	else {
+		SDL_ShowCursor(0);
+	}
+
+	/* patch resolution of the window */
+	patchDWord((void*)ADDR_WindowResoltionX, resX);
+	patchDWord((void*)ADDR_WindowResoltionY, resY);
+
+	/* set aspect ratio and FOV */
+	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
+	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
+}
+
+void writeConfigValues() {
+	*antialiasing = graphics_settings.antialiasing;
+	if (graphics_settings.hqshadows)
+	{
+		*hq_shadows = graphics_settings.hqshadows;
+		patchByte((void*)(0x004A19E5 + 2), 0x04); /* very high shadow quality */
+		patchByte((void*)(0x004A19EA + 2), 0x04);
+	}
+	*distance_clipping = graphics_settings.distanceclipping;
+	*fog = graphics_settings.fog;
+
+	uint32_t distance = graphics_settings.clippingdistance;
+	uint32_t distance2 = 1;
+
+	if (distance > 100)
+		distance = 100;
+	else if (distance < 2)
+	{
+		distance = 1;
+		distance2 = 0;
+	}
+	*clipping_distance = distance;
+	*clipping_distance2 = distance * 5.0 + 95.0;
+
+	Log::TypedLog(CHN_DLL, "Setting launcher settings\n");
 }
 
 void __cdecl setAspectRatio(float aspect) {

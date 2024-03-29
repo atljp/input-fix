@@ -4,16 +4,11 @@ bool l_ExitOnAssert = true;
 bool l_UseConsole, l_DebugOutput;
 FILE* CON, * f_tracer, * f_logger;
 HANDLE consoleHandle;
-char dump_name[] = "dump";
 
 namespace Log {
 
 	bool ConsoleAllowed() { return l_UseConsole; }
 	bool OutputAllowed() { return l_DebugOutput; }
-
-	// Ported from WTDE, fix this in the future if desired
-	// (For now, we'll just spit all logs to console)
-	bool ChannelAllowed(const char* category) { return true; }
 
 	//------------------------
 	// Prepare the logger
@@ -65,10 +60,7 @@ namespace Log {
 	void CoreLog(const char* to_log, const char* category = CHN_LOG) {
 		// Output to console
 		if (ConsoleAllowed())
-		{
-			if (ChannelAllowed(category))
-				printf("[%s] %s", category, to_log);
-		}
+			printf("[%s] %s", category, to_log);
 
 		// Also write to .txt file!
 		if (OutputAllowed() && f_logger)

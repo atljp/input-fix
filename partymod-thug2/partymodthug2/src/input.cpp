@@ -350,7 +350,6 @@ void pollController(device* dev, SDL_GameController* controller) {
 			if (getButton(controller, padbinds.caveman2)) {
 				printf("Caveman2\n");
 				dev->controlData[20] |= 0x01 << 0; //Just Caveman but also "Zoom Out" in Create-A-Goal
-
 			}
 		}
 
@@ -452,7 +451,6 @@ void taunt(uint8_t tauntkey) {
 			checkParams->AddChecksum(0xB53D0E0F, 0xA36DBEE1);	// string_id, no_way_string
 			break;
 		default:
-			printf("Invalid taunt\n");
 			break;
 		}
 		RunScript(0x2C43B5BA, checkParams, nullptr); // Script: SendTauntMessage
