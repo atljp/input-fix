@@ -1,33 +1,19 @@
 #include <config.h>
-#include <QB/LazyStruct.h>
-#include <Logger/Logger.h>
-
-#define GRAPHICS_SECTION "Graphics"
-#define KEYBIND_SECTION "Keybinds"
-#define CONTROLLER_SECTION "Gamepad"
-
-#define VERSION_NUMBER_MAJOR 0
-#define VERSION_NUMBER_MINOR 4
 
 char* executableDirectory[MAX_PATH];
 
-
-uint8_t isWindowed = 0;
-//uint32_t* resolution_setting = 0x008b455c;
+float* screenAspectRatio = (float*)0x00701340;
 uint8_t* antialiasing = (uint8_t*)(0x007D6434);
 uint8_t* hq_shadows = (uint8_t*)0x007D6435;
 uint8_t* distance_clipping = (uint8_t*)(0x007D643A);
+uint8_t* fog = (uint8_t*)(0x007D6436);
 uint8_t* clipping_distance = (uint8_t*)(0x007D6440);	//0x01 - 0x64 val
 uint16_t* clipping_distance2 = (uint16_t*)(0x007D6444);	//0x64 - 0x253 val*5 +95
-
-uint8_t* fog = (uint8_t*)(0x007D6436);
 HWND* hwnd = (HWND*)0x007D6A28;
+SDL_Window* window;
 
-uint8_t isBorderless;
-
-int defWidth;
-int defHeight;
-
+uint8_t isWindowed;
+int8_t isBorderless;
 uint8_t console;
 uint8_t language;
 uint8_t buttonfont;
@@ -36,23 +22,21 @@ uint8_t spindelay;
 uint8_t airdrift;
 uint8_t suninnetgame;
 uint8_t boardscuffs;
-
-
-typedef struct {
-	uint32_t antialiasing;
-	uint32_t hqshadows;
-	uint32_t distanceclipping;
-	uint32_t clippingdistance;	// int from 1-100
-	uint32_t fog;
-} graphicsSettings;
+uint8_t Ps2Controls;
+uint8_t invertRXplayer1;
+uint8_t invertRYplayer1;
 
 int resX;
 int resY;
-float aspect_ratio;
+int defWidth;
+int defHeight;
 graphicsSettings graphics_settings;
-SDL_Window* window;
 
+typedef uint32_t ButtonLookup_NativeCall(char* button);
+ButtonLookup_NativeCall* ButtonLookup_Native = (ButtonLookup_NativeCall*)(0x004020E0);
 
+typedef uint32_t __cdecl unkButtonMap_NativeCall(uint32_t buttonmap);
+unkButtonMap_NativeCall* unkButtonMap_Native = (unkButtonMap_NativeCall*)(0x00479070);
 
 void enforceMaxResolution() {
 
@@ -122,11 +106,11 @@ void createSDLWindow()
 		SDL_ShowCursor(0);
 	}
 
-	// patch resolution of the window
+	/* patch resolution of the window */
 	patchDWord((void*)ADDR_WindowResoltionX, resX);
 	patchDWord((void*)ADDR_WindowResoltionY, resY);
 
-	//Set aspect ratio and FOV
+	/* set aspect ratio and FOV */
 	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
 	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
 }
@@ -178,7 +162,6 @@ void initPatch() {
 	/* First, patch static values into the exe */
 	patchStaticValues();
 
-
 	/* Get INI path */
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 	char* exe = strrchr((LPSTR)executableDirectory, '\\'); // find last slash
@@ -187,7 +170,6 @@ void initPatch() {
 	}
 	char configFile[MAX_PATH];
 	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
-
 
 	/* Read INI config values*/
 	console = GetPrivateProfileInt("Miscellaneous", "Console", 0, configFile);
@@ -207,7 +189,9 @@ void initPatch() {
 	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
 	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
 	isBorderless = getIniBool("Graphics", "Borderless", 0, configFile);
-
+	Ps2Controls = getIniBool("Controls", "Ps2Controls", 1, configFile);
+	invertRXplayer1 = getIniBool("Controls", "InvertRXPlayer1", 0, configFile);
+	invertRYplayer1 = getIniBool("Controls", "InvertRYPlayer1", 0, configFile);
 
 	/* Allocate console */
 	if (console) {
@@ -219,10 +203,8 @@ void initPatch() {
 	Log::TypedLog(CHN_DLL, "PARTYMOD for THUG2 %d.%d\n", VERSION_NUMBER_MAJOR, VERSION_NUMBER_MINOR);
 	Log::TypedLog(CHN_DLL, "DIRECTORY: %s\n", (LPSTR)executableDirectory);
 	Log::TypedLog(CHN_DLL, "Patch initialized\n");
-	Log::TypedLog(CHN_DLL, "Initializing INI settings\n");
-	Log::TypedLog(CHN_DLL, "---------------------------------------------------------\n");
+	Log::TypedLog(CHN_DLL, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Initializing INI settings\n");
 	
-
 
 	/* Set language */
 	patchNop((void*)ADDR_FUNC_LangFromReg, 5);		//Don't get the value from registry
@@ -240,7 +222,6 @@ void initPatch() {
 	patchByte((void*)(ADDR_LanguageFlag + 0xC), 0x01);
 	Log::TypedLog(CHN_DLL, "Loading language setting: %s\n", (language == 1) ? "English" : ((language == 2) ? "French" : ((language == 3) ? "German" : "English")));
 
-
 	/* Set button font */
 	patch_button_font(buttonfont);
 	if (buttonfont > 1)
@@ -248,12 +229,10 @@ void initPatch() {
 	else
 		Log::TypedLog(CHN_DLL, "Loading button font: PC\n");
 
-
-	/* Toggle intro movies */
+	/* Set intro movies */
 	if (!intromovies)
 		patchBytesM((void*)ADDR_IntroMovies, (BYTE*)"\x83\xf8\x01\x90\x90\x75\x01\xc3\xe9\x83\x05\x00\x00", 13);
 	Log::TypedLog(CHN_DLL, "Intro movies: %s\n", intromovies ? "Enabled" : "Disabled");
-
 
 	/* Set THUG airdrift */
 	if (airdrift)
@@ -264,7 +243,6 @@ void initPatch() {
 	}
 	Log::TypedLog(CHN_DLL, "Airdrift: %s\n", airdrift ? "Enabled" : "Disabled");
 
-
 	/* Set spindelay. Off is Ps2 default, on is PC default (value = 100) */
 	if (!spindelay)
 	{
@@ -272,7 +250,6 @@ void initPatch() {
 		patchNop((void*)ADDR_SpinLagR, 2);
 	}
 	Log::TypedLog(CHN_DLL, "Spindelay: %s\n", spindelay ? "Enabled (PC default)" : "Disabled (Ps2 default)");
-
 
 	/* Graphic settings */
 	Log::TypedLog(CHN_DLL, "Graphic settings - Fullscreen Anti-Aliasing: %s\n", graphics_settings.antialiasing ? "Enabled" : "Disabled");
@@ -285,8 +262,7 @@ void initPatch() {
 	Log::TypedLog(CHN_DLL, "Graphic settings - Resolution from INI: %d x %d\n", resX, resY);
 	Log::TypedLog(CHN_DLL, "Graphic settings - Window mode: %s \n", (isWindowed && !isBorderless) ? "Enabled (default)" : ((isWindowed && isBorderless) ? "Enabled (borderless)" : "Disabled"));
 
-	Log::TypedLog(CHN_DLL, "---------------------------------------------------------\n");
-	Log::TypedLog(CHN_DLL, "Finished initializing INI settings\n");
+	Log::TypedLog(CHN_DLL, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Finished initializing INI settings\n");
 }
 
 void patchStaticValues() {
@@ -361,7 +337,6 @@ void patchStaticValues() {
 	patchCall((void*)0x004523F6, &Rnd_fixed);
 }
 
-float* screenAspectRatio = (float*)0x00701340;
 void __cdecl setAspectRatio(float aspect) {
 	*screenAspectRatio = (float)resX / (float)resY;
 }
@@ -370,6 +345,7 @@ float __cdecl getScreenAngleFactor() {
 	return ((float)resX / (float)resY) / (4.0f / 3.0f);
 }
 
+/* called from patchScripts */
 float getaspectratio() {
 	return ((float)resX / (float)resY);
 }
@@ -398,9 +374,6 @@ int Rnd_fixed(int n)
 {
 	return (rand() % n);
 }
-
-typedef uint32_t ButtonLookup_NativeCall(char* button);
-ButtonLookup_NativeCall* ButtonLookup_Native = (ButtonLookup_NativeCall*)(0x004020E0);
 
 uint32_t patchButtonLookup(char* p_button) {
 
@@ -507,9 +480,6 @@ uint32_t patchButtonLookup(char* p_button) {
 	*/
 }
 
-typedef uint32_t __cdecl unkButtonMap_NativeCall(uint32_t buttonmap);
-unkButtonMap_NativeCall* unkButtonMap_Native = (unkButtonMap_NativeCall*)(0x00479070);
-
 uint32_t patchMetaButtonMap() {
 	if (buttonfont == 2)
 		return unkButtonMap_Native(0x6030A16D); /* meta_button_map_ps2 */
@@ -543,25 +513,20 @@ void patch_button_font(uint8_t sel)
 	}
 }
 
-/* provide info about ps2 layout for input.cpp */
+/* provide info about input settings for input.cpp */
 void loadInputSettings(struct inputsettings* settingsOut) {
-
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
-
-	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory, '\\');
-	if (exe) {
-		*(exe + 1) = '\0';
-	}
-
-	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
-
 	if (settingsOut) {
-		settingsOut->isPs2Controls = getIniBool("Controls", "Ps2Controls", 1, configFile);
-		settingsOut->invertRXplayer1 = getIniBool("Controls", "InvertRXPlayer1", 0, configFile);
-		settingsOut->invertRYplayer1 = getIniBool("Controls", "InvertRYPlayer1", 0, configFile);	
+		settingsOut->isPs2Controls = Ps2Controls;
+		settingsOut->invertRXplayer1 = invertRXplayer1;
+		settingsOut->invertRYplayer1 = invertRYplayer1;
 	}
+}
+
+
+char getConfigFilePath() {
+
+
+
 }
 
 /* Keyboard binds */

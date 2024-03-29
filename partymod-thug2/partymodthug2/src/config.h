@@ -1,17 +1,23 @@
-#include <windows.h>
+#pragma once
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>
-
-#include <patch.h>
-#include <input.h>
-#include <global.h>
-
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include "patch.h"
+#include "input.h"
+#include "global.h"
+#include "QB/LazyStruct.h"
+#include "Logger/Logger.h"
 
 #define CONFIG_FILE_NAME "partymod.ini"
+#define GRAPHICS_SECTION "Graphics"
+#define KEYBIND_SECTION "Keybinds"
+#define CONTROLLER_SECTION "Gamepad"
+#define VERSION_NUMBER_MAJOR 0
+#define VERSION_NUMBER_MINOR 4
 
 struct keybinds {
 	//SDL_Scancode menu;
@@ -20,34 +26,29 @@ struct keybinds {
 	SDL_Scancode focus;
 	SDL_Scancode caveman;
 	SDL_Scancode caveman2;
-
 	SDL_Scancode grind;
 	SDL_Scancode grab;
 	SDL_Scancode ollie;
 	SDL_Scancode kick;
-
 	SDL_Scancode leftSpin;
 	SDL_Scancode rightSpin;
 	SDL_Scancode nollie;
 	SDL_Scancode switchRevert;
-
 	SDL_Scancode right;
 	SDL_Scancode left;
 	SDL_Scancode up;
 	SDL_Scancode down;
-
 	SDL_Scancode cameraRight;
 	SDL_Scancode cameraLeft;
 	SDL_Scancode cameraUp;
 	SDL_Scancode cameraDown;
-
 	SDL_Scancode item_up;
 	SDL_Scancode item_down;
 	SDL_Scancode item_left;
 	SDL_Scancode item_right;
 };
 
-// a recreation of the SDL_GameControllerButton enum, but with the addition of right/left trigger
+/* a recreation of the SDL_GameControllerButton enum, but with the addition of right / left trigger */
 typedef enum {
 	CONTROLLER_UNBOUND = -1,
 	CONTROLLER_BUTTON_A = SDL_CONTROLLER_BUTTON_A,
@@ -88,25 +89,29 @@ struct controllerbinds {
 	controllerButton focus;
 	controllerButton caveman;
 	controllerButton caveman2;
-
 	controllerButton grind;
 	controllerButton grab;
 	controllerButton ollie;
 	controllerButton kick;
-
 	controllerButton leftSpin;
 	controllerButton rightSpin;
 	controllerButton nollie;
 	controllerButton switchRevert;
-
 	controllerButton right;
 	controllerButton left;
 	controllerButton up;
 	controllerButton down;
-
 	controllerStick movement;
 	controllerStick camera;
 };
+
+typedef struct {
+	uint32_t antialiasing;
+	uint32_t hqshadows;
+	uint32_t distanceclipping;
+	uint32_t clippingdistance;
+	uint32_t fog;
+} graphicsSettings;
 
 struct inputsettings {
 	uint8_t isPs2Controls;
@@ -120,14 +125,19 @@ struct scriptsettings {
 	uint8_t boardscuffs;
 };
 
+
+/* function definitions */
+
+void enforceMaxResolution();
+void createSDLWindow();
+void writeConfigValues();
+void patchWindow();
 void initPatch();
 void patchStaticValues();
-
 void loadInputSettings(struct inputsettings* settingsOut);
 void loadControllerBinds(struct controllerbinds* bindsOut);
 void loadKeyBinds(struct keybinds* bindsOut);
 int getIniBool(const char* section, const char* key, int def, char* file);
-
 int Rnd_fixed(int n);
 void setAspectRatio(float aspect);
 float getScreenAngleFactor();
