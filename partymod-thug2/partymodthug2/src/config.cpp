@@ -17,8 +17,9 @@ uint8_t isWindowed = 0;
 uint8_t* antialiasing = (uint8_t*)(0x007D6434);
 uint8_t* hq_shadows = (uint8_t*)0x007D6435;
 uint8_t* distance_clipping = (uint8_t*)(0x007D643A);
-uint8_t* clipping_distance = (uint8_t*)(0x007D6444);	//0x64 - 0x253 val*5 +95
-uint8_t* clipping_distance_2 = (uint8_t*)(0x007D6440); //0x00 - 0x64 val
+uint8_t* clipping_distance = (uint8_t*)(0x007D6440);	//0x01 - 0x64 val
+uint16_t* clipping_distance2 = (uint16_t*)(0x007D6444);	//0x64 - 0x253 val*5 +95
+
 uint8_t* fog = (uint8_t*)(0x007D6436);
 HWND* hwnd = (HWND*)0x007D6A28;
 
@@ -58,9 +59,6 @@ void enforceMaxResolution() {
 	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */
 	defHeight = GetSystemMetrics(SM_CYSCREEN);	/* The height of the screen of the primary display monitor, in pixels.  */
 
-	//printf("defWidth: %d\n", defWidth);
-	//printf("defHeight: %d\n", defHeight);
-
 	uint8_t isValidX = 0;
 	uint8_t isValidY = 0;
 
@@ -95,16 +93,16 @@ void createSDLWindow()
 		resY = 480;
 	}
 
-	printf("Setting resolution: %d x %d\n", resX, resY);
-	printf("Aspect ratio:%f\n", getaspectratio());
+	Log::TypedLog(CHN_DLL, "Setting resolution: %d x %d\n", resX, resY);
+	Log::TypedLog(CHN_DLL, "Aspect ratio:%f\n", getaspectratio());
 
 	window = SDL_CreateWindow("THUG2 PARTYMOD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, resX, resY, flags);   // TODO: move / resize borderless window
 	SDL_SetWindowResizable(window, SDL_TRUE);
 
 	if (!window)
-		printf("Failed to create window! Error: %s\n", SDL_GetError());
+		Log::TypedLog(CHN_SDL, "Failed to create window! Error: %s\n", SDL_GetError());
 	else
-		printf("Window successfully created!\n");
+		Log::TypedLog(CHN_SDL, "Window successfully created!\n");
 
 	SDL_SysWMinfo wmInfo;
 	SDL_VERSION(&wmInfo.version);
@@ -136,32 +134,30 @@ void createSDLWindow()
 
 void writeConfigValues()
 {
-	uint32_t distance_real = 1;
-	uint32_t distance = graphics_settings.clippingdistance;
-
 	*antialiasing = graphics_settings.antialiasing;
 	if (graphics_settings.hqshadows)
 	{
-		printf("Setting HQ Shadows\n");
 		*hq_shadows = graphics_settings.hqshadows;
-		patchByte((void*)(0x004A19E5 + 2), 0x04); //Very high shadow quality
+		patchByte((void*)(0x004A19E5 + 2), 0x04); /* very high shadow quality */
 		patchByte((void*)(0x004A19EA + 2), 0x04);
 	}
 	*distance_clipping = graphics_settings.distanceclipping;
 	*fog = graphics_settings.fog;
+
+	uint32_t distance = graphics_settings.clippingdistance;
+	uint32_t distance2 = 1;
 
 	if (distance > 100)
 		distance = 100;
 	else if (distance < 2)
 	{
 		distance = 1;
-		distance_real = 0;
+		distance2 = 0;
 	}
-	*clipping_distance = distance * 5.0f + 95.0f;
-	if (distance_real)
-		*clipping_distance_2 = distance;
-	else
-		*clipping_distance_2 = distance_real;
+	*clipping_distance = distance;
+	*clipping_distance2 = distance * 5.0 + 95.0;
+
+	Log::TypedLog(CHN_DLL, "Setting launcher settings\n");
 }
 
 
