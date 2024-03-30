@@ -173,7 +173,7 @@ void __fastcall sCreateScriptSymbolWrapper(uint32_t size, const uint8_t* p_data,
 	}
 }
 
-/* sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new1, 0xD2BE4CAF, "scripts\\myan.qb"); 0xD2BE4CAF = skateshop_scaling_options */
+/* sCreateSymbolOfTheFormNameEqualsValueWrapper((uint8_t*)skateshop_scaling_options_new, 0xD2BE4CAF, "scripts\\myan.qb"); 0xD2BE4CAF = skateshop_scaling_options */
 const char* p_fileName = "scripts\\myan.qb";
 void __fastcall loadXYZScales() {
 	__asm {
@@ -191,7 +191,7 @@ void __fastcall loadXYZScales() {
 	}
 }
 
-void __cdecl initScripts()
+void __cdecl loadScripts()
 {
 	/* qb data in scriptcontent.h */
 
@@ -199,9 +199,9 @@ void __cdecl initScripts()
 	uint32_t contentsChecksum = CalculateScriptContentsChecksum_Native((uint8_t*)enter_kb_chat_new);
 	sCreateScriptSymbolWrapper(0x9E, (uint8_t*)enter_kb_chat_new, 0x3B4548B8, contentsChecksum, "scripts\\game\\game.qb");
 
-	removeScript(0x5C51FEAB); /* test */
-	uint32_t contentsChecksum2 = CalculateScriptContentsChecksum_Native((uint8_t*)enablesun_new);
-	sCreateScriptSymbolWrapper(0x2B, (uint8_t*)enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
+	//removeScript(0x5C51FEAB); /* test */
+	//uint32_t contentsChecksum2 = CalculateScriptContentsChecksum_Native((uint8_t*)enablesun_new);
+	//sCreateScriptSymbolWrapper(0x2B, (uint8_t*)enablesun_new, 0x5C51FEAB, contentsChecksum2, "scripts\\game\\env_fx.qb");
 
 	removeScript(0x9F95228A); /* scalingmenu_get_limits */
 	uint32_t temp = CalculateScriptContentsChecksum_Native((uint8_t*)scalingmenu_get_limits_original);
@@ -209,7 +209,7 @@ void __cdecl initScripts()
 	sCreateScriptSymbolWrapper(0x37, (uint8_t*)scalingmenu_get_limits_addition, 0x9F95228A, temp, "scripts\\myan.qb");
 
 	//removeScript(0x1B95F333); /* create_scale_options_menu */
-	//sCreateScriptSymbolWrapper(0x4EC, (uint8_t*)create_scale_options_menu_addition1, 0x1B95F333, 0xFC4A3248, "scripts\\myan.qb");
+	//sCreateScriptSymbolWrapper(0x4EC, (uint8_t*)create_scale_options_menu_addition1, 0x1B95F333, 0xFC4A3248, "scripts\\myan.qb"); /* 0xFC4A3248 = contentsChecksum of original create_scale_options_menu script */
 
 	uint32_t contentsChecksum3 = CalculateScriptContentsChecksum_Native((uint8_t*)showboardmyan);
 	sCreateScriptSymbolWrapper(0x9C, (uint8_t*)showboardmyan, 0x36150445, contentsChecksum3, "scripts\\myan.qb"); /* new script: showboardmyan 0x36150445 */
@@ -274,6 +274,12 @@ bool ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 	return CreateScreenElement_Native(pParams, pScript);
 }
 
+uint32_t somegetter() {
+
+
+
+}
+
 bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
 
 	DummyUnkElem* unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
@@ -281,10 +287,10 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 
 	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
 
-		if (pScript->mScriptNameChecksum == 0xE2873769) { // script: create_cas_modifier_menu
+		if (pScript->mScriptNameChecksum == 0xE2873769) { /* script: create_cas_modifier_menu */
 
 			pParams->AddChecksum(0, 0x36150445);
-			RunScript(0x36150445, pScript->GetParams, nullptr);
+			RunScript(0x36150445, pScript->GetParams, nullptr); /* showboardmyan */
 			printf("script: create_cas_modifier_menu!\n");
 
 		} else if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
@@ -309,7 +315,7 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 void patchScripts() {
 
 	/* First, get config from INI. struct defined in config.h */
-	getconfig(&mScriptsettings);
+	getScriptSettings(&mScriptsettings);
 
 	patchDWord((void*)0x0068146C, (uint32_t)&CFunc_IsPS2_Patched); /* returns true for the neversoft test skater */
 	patchDWord((void*)0x0067F7D4, (uint32_t)&GetMemCardSpaceAvailable_Patched);
@@ -325,5 +331,5 @@ void patchScripts() {
 	uint32_t bb = 0xDEADBEEF;
 	printf("0x%08x\n", bb);
 
-	patchJump((void*)0x005A5B32, initScripts); /* loads single functions of scripts and overwrites existing ones */
+	patchJump((void*)0x005A5B32, loadScripts); /* loads single functions of scripts and overwrites existing ones */
 }

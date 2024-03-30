@@ -16,6 +16,10 @@
 #define GRAPHICS_SECTION "Graphics"
 #define KEYBIND_SECTION "Keybinds"
 #define CONTROLLER_SECTION "Gamepad"
+#define MISC_SECTION "Miscellaneous"
+#define GAMEPLAY_SECTION "Gameplay"
+#define EXTRA_SECTION "Extra"
+#define CONTROLS_SECTION "Controls"
 #define VERSION_NUMBER_MAJOR 0
 #define VERSION_NUMBER_MINOR 4
 
@@ -125,13 +129,11 @@ struct scriptsettings {
 	uint8_t boardscuffs;
 };
 
-
-/* function definitions */
-
 void enforceMaxResolution();
 void createSDLWindow();
 void writeConfigValues();
 void patchWindow();
+SDL_Window* getWindowHandle();
 void initPatch();
 void patchStaticValues();
 void loadInputSettings(struct inputsettings* settingsOut);
@@ -145,4 +147,7 @@ void patchWindow();
 void patch_button_font(uint8_t sel);
 float getScreenAngleFactor();
 float getaspectratio();
-void getconfig(struct scriptsettings* scriptsettingsOut);
+void getScriptSettings(struct scriptsettings* scriptsettingsOut);
+void getConfigFilePath(char mConfigFile[MAX_PATH]);
+void loadKeyBinds(struct keybinds* bindsOut);
+void loadControllerBinds(struct controllerbinds* bindsOut);

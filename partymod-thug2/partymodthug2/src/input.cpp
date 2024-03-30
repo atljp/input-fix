@@ -22,6 +22,7 @@ uint8_t isKeyboardTyping();
 uint8_t menu_on_screen();
 void CheckChatHotkey();
 bool TextInputInNetGame();
+SDL_Window* mWindow;
 
 uint32_t checksum;
 void __cdecl set_actuators(int port, uint16_t hight, uint16_t low);
@@ -1010,7 +1011,6 @@ void do_key_input(SDL_KeyCode key) {
 		}
 		*/ // accents need more work
 	}
-
 	m_keyinput(key_out, 0);
 }
 
@@ -1084,8 +1084,8 @@ void processEvent(SDL_Event* e) {
 				return;
 			}
 			else if (e->window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-				*(int*)ADDR_IsFocused = 1;
-				*(int*)ADDR_OtherIsFocused = 1;
+				*(int*)ADDR_IsFocused = 0;
+				*(int*)ADDR_OtherIsFocused = 0;
 				return;
 			}
 		}
@@ -1253,9 +1253,6 @@ void __stdcall initManager() {
 		}
 
 	}
-
-
-
 	loadInputSettings(&inputsettings);
 	loadKeyBinds(&keybinds);
 	loadControllerBinds(&padbinds);
@@ -1271,20 +1268,21 @@ void __stdcall initManager() {
 	
 	// Add missing key info: Since we don't use the launcher, no registry values for our keybinds are set.
 	// The game normally loads keybinds found in the registry and stores them at these addresses (starting at 0x007D6794).
-	// This simulates the launcher storing its defined keybinds in memory so that they can be displayed in game (e.g., Edit Tricks menu "<- + KP4" or Tantrum Meter "Press KB8 to freak out").
-	patchKeycode((void*)0x007D6794, convert_SDL_to_OIS_keycode(keybinds.grab)); //Grab
-	patchKeycode((void*)0x007D6798, convert_SDL_to_OIS_keycode(keybinds.kick)); //Flip
-	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind)); //Grind
-	patchKeycode((void*)0x007D67B0, convert_SDL_to_OIS_keycode(keybinds.leftSpin)); //Leftspin, Nollie
-	patchKeycode((void*)0x007D67B4, convert_SDL_to_OIS_keycode(keybinds.rightSpin)); //Rightspin, Revert
+	// This simulates the launcher storing its defined keybinds in memory so that they can be displayed in game (e.g., Edit Tricks menu "<- + KP4" or Tantrum Meter "Press KP8 to freak out").
+	patchKeycode((void*)0x007D6790, convert_SDL_to_OIS_keycode(keybinds.ollie));
+	patchKeycode((void*)0x007D6794, convert_SDL_to_OIS_keycode(keybinds.grab));
+	patchKeycode((void*)0x007D6798, convert_SDL_to_OIS_keycode(keybinds.kick));
+	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind));
+	patchKeycode((void*)0x007D67B0, convert_SDL_to_OIS_keycode(keybinds.leftSpin));
+	patchKeycode((void*)0x007D67B4, convert_SDL_to_OIS_keycode(keybinds.rightSpin));
 	patchKeycode((void*)0x007D67A8, convert_SDL_to_OIS_keycode(keybinds.caveman));
 	patchKeycode((void*)0x007D67AC, convert_SDL_to_OIS_keycode(keybinds.caveman2));
+	patchKeycode((void*)0x007D67B8, convert_SDL_to_OIS_keycode(keybinds.focus));
 
+	mWindow = getWindowHandle();
 }
 
-void patchPs2Buttons()
-{
-
+void patchPs2Buttons() {
 	printf("Patching PS2 Buttons\n");
 	patchByte((void*)(0x0051F4C6 + 2), 0x05);	// change PC platform to gamecube.  this just makes it default to ps2 controls. needed for rail DD on R2
 

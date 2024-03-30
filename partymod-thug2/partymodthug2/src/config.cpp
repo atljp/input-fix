@@ -39,40 +39,33 @@ typedef uint32_t __cdecl unkButtonMap_NativeCall(uint32_t buttonmap);
 unkButtonMap_NativeCall* unkButtonMap_Native = (unkButtonMap_NativeCall*)(0x00479070);
 
 void initPatch() {
-
 	/* First, patch static values into the exe */
 	patchStaticValues();
 
-	/* Get INI path */
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
-	char* exe = strrchr((LPSTR)executableDirectory, '\\'); // find last slash
-	if (exe) {
-		*(exe + 1) = '\0';
-	}
+	/* Read INI config values */
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
+	getConfigFilePath(configFile);
 
-	/* Read INI config values*/
-	console = GetPrivateProfileInt("Miscellaneous", "Console", 0, configFile);
-	language = GetPrivateProfileInt("Miscellaneous", "Language", 1, configFile);
-	buttonfont = GetPrivateProfileInt("Miscellaneous", "ButtonFont", 1, configFile);
-	intromovies = getIniBool("Miscellaneous", "IntroMovies", 1, configFile);
-	spindelay = getIniBool("Gameplay", "SpinDelay", 1, configFile);
-	airdrift = getIniBool("Gameplay", "THUGAirDrift", 0, configFile);
-	suninnetgame = getIniBool("Extra", "SunInNetGame", 0, configFile);
-	boardscuffs = getIniBool("Extra", "Boardscuffs", 1, configFile);
-	graphics_settings.antialiasing = getIniBool("Graphics", "AntiAliasing", 0, configFile);
-	graphics_settings.hqshadows = getIniBool("Graphics", "HQShadows", 0, configFile);
-	graphics_settings.distanceclipping = getIniBool("Graphics", "DistanceClipping", 0, configFile);
+	console = GetPrivateProfileInt(MISC_SECTION, "Console", 0, configFile);
+	language = GetPrivateProfileInt(MISC_SECTION, "Language", 1, configFile);
+	buttonfont = GetPrivateProfileInt(MISC_SECTION, "ButtonFont", 1, configFile);
+	intromovies = getIniBool(MISC_SECTION, "IntroMovies", 1, configFile);
+	spindelay = getIniBool(GAMEPLAY_SECTION, "SpinDelay", 1, configFile);
+	airdrift = getIniBool(GAMEPLAY_SECTION, "THUGAirDrift", 0, configFile);
+	suninnetgame = getIniBool(EXTRA_SECTION, "SunInNetGame", 0, configFile);
+	boardscuffs = getIniBool(EXTRA_SECTION, "Boardscuffs", 1, configFile);
+	graphics_settings.antialiasing = getIniBool(GRAPHICS_SECTION, "AntiAliasing", 0, configFile);
+	graphics_settings.hqshadows = getIniBool(GRAPHICS_SECTION, "HQShadows", 0, configFile);
+	graphics_settings.distanceclipping = getIniBool(GRAPHICS_SECTION, "DistanceClipping", 0, configFile);
 	graphics_settings.clippingdistance = GetPrivateProfileInt("Graphics", "ClippingDistance", 100, configFile);
-	graphics_settings.fog = getIniBool("Graphics", "Fog", 0, configFile);
-	resX = GetPrivateProfileInt("Graphics", "ResolutionX", 640, configFile);
-	resY = GetPrivateProfileInt("Graphics", "ResolutionY", 480, configFile);
-	isWindowed = getIniBool("Graphics", "Windowed", 0, configFile);
-	isBorderless = getIniBool("Graphics", "Borderless", 0, configFile);
-	Ps2Controls = getIniBool("Controls", "Ps2Controls", 1, configFile);
-	invertRXplayer1 = getIniBool("Controls", "InvertRXPlayer1", 0, configFile);
-	invertRYplayer1 = getIniBool("Controls", "InvertRYPlayer1", 0, configFile);
+	graphics_settings.fog = getIniBool(GRAPHICS_SECTION, "Fog", 0, configFile);
+	resX = GetPrivateProfileInt(GRAPHICS_SECTION, "ResolutionX", 640, configFile);
+	resY = GetPrivateProfileInt(GRAPHICS_SECTION, "ResolutionY", 480, configFile);
+	isWindowed = getIniBool(GRAPHICS_SECTION, "Windowed", 0, configFile);
+	isBorderless = getIniBool(GRAPHICS_SECTION, "Borderless", 0, configFile);
+	Ps2Controls = getIniBool(CONTROLS_SECTION, "Ps2Controls", 1, configFile);
+	invertRXplayer1 = getIniBool(CONTROLS_SECTION, "InvertRXPlayer1", 0, configFile);
+	invertRYplayer1 = getIniBool(CONTROLS_SECTION, "InvertRYPlayer1", 0, configFile);
 
 	/* Allocate console */
 	if (console) {
@@ -116,8 +109,7 @@ void initPatch() {
 	Log::TypedLog(CHN_DLL, "Intro movies: %s\n", intromovies ? "Enabled" : "Disabled");
 
 	/* Set THUG airdrift */
-	if (airdrift)
-	{
+	if (airdrift) {
 		patchNop((void*)0x00526A36, 8); //Lock camera fix
 		patchNop((void*)ADDR_AirDrift, 8);
 		/* Walkspin is disabled in script.cpp */
@@ -125,8 +117,7 @@ void initPatch() {
 	Log::TypedLog(CHN_DLL, "Airdrift: %s\n", airdrift ? "Enabled" : "Disabled");
 
 	/* Set spindelay. Off is Ps2 default, on is PC default (value = 100) */
-	if (!spindelay)
-	{
+	if (!spindelay) {
 		patchNop((void*)ADDR_SpinLagL, 2);
 		patchNop((void*)ADDR_SpinLagR, 2);
 	}
@@ -147,7 +138,6 @@ void initPatch() {
 }
 
 void patchStaticValues() {
-
 	/* Increase startup speed */
 	patchByte((void*)0x0045002C, 0x74);
 	patchByte((void*)0x0052F70F, 0xEB);
@@ -193,7 +183,7 @@ void patchStaticValues() {
 	/* No CAS integrity check */
 	patchNop((void*)0x005A8A01, 2);
 
-	//Patch static values for online play
+	/* Patch static values for online play */
 	patchBytesM((void*)0x0064CD97, (BYTE*)"\x74\x68\x6D\x6F\x64\x73\x2E\x63\x6F\x6D\x2F\x6D\x6F\x74\x64\x2E\x64\x61\x74\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 65);
 	patchBytesM((void*)0x0064D67A, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
 	patchBytesM((void*)0x0066729D, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
@@ -208,30 +198,30 @@ void patchStaticValues() {
 	patchBytesM((void*)0x0068EABD, (BYTE*)"\x6F\x70\x65\x6E\x73\x70\x79\x2E\x6E\x65\x74", 11);
 	patchBytesM((void*)0x00668074, (BYTE*)"\x54\x32\x43\x72\x61\x63\x6B\x45\x00\x00\x00\x00\x00\x00\x00\x00", 16);
 
-	//Connection refused fix
+	/* Connection refused fix */
 	patchByte((void*)0x005F95BB, 0xEB);
 
-	//Patch fixed RNG
-	srand(static_cast<unsigned int>(time(0)));
+	/* Patch fixed RNG */
+	srand(time(0));
 	patchCall((void*)0x004523A7, &Rnd_fixed);
 	patchCall((void*)0x004523B4, &Rnd_fixed);
 	patchCall((void*)0x004523F6, &Rnd_fixed);
 }
 
 void patchWindow() {
-	// replace the window with an SDL2 window.  this kind of straddles the line between input and config
+	/* replace the window with an SDL2 window. this kind of straddles the line between input and config */
 	patchCall((void*)ADDR_FUNC_CreateWindow, &createSDLWindow);
 	patchByte((void*)(ADDR_FUNC_CreateWindow + 5), 0xC3);
 
-	patchNop((void*)ADDR_FixWindowPos, 14);	// don't move window to corner
+	/* don't move window to corner */
+	patchNop((void*)ADDR_FixWindowPos, 14);	
 
-	//Don't load launcher settings from registry, use our own ini values instead
+	/* don't load launcher settings from registry, use our own INI values instead */
 	patchCall((void*)0x005F4591, writeConfigValues);
 }
 
 
 void enforceMaxResolution() {
-
 	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */
 	defHeight = GetSystemMetrics(SM_CYSCREEN);	/* The height of the screen of the primary display monitor, in pixels.  */
 
@@ -269,7 +259,8 @@ void createSDLWindow() {
 		flags |= SDL_WINDOW_BORDERLESS;
 	}
 
-	/* Fullscreen mode: Sets resX and resY to 0 if the resolution from INI is not supported on the device. Window mode: Sets resX and resY to 0 if the resoltion from INI is bigger than the max supported one */
+	/* Fullscreen mode: Sets resX and resY to 0 if the resolution from INI is not supported on the device. */
+	/* Window mode : Sets resX and resY to 0 if the resoltion from INI is bigger than the max supported one */
 	enforceMaxResolution();
 
 	if (resX == 0 || resY == 0) {
@@ -304,7 +295,7 @@ void createSDLWindow() {
 
 	//DirectX9: D3DPRESENTPARAMS
 	if (isWindowed) {
-		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); //Windowed = 1
+		patchBytesM((void*)0x004D871F, (BYTE*)"\xA3\x9C\x6A\x78\x00\x90", 6); /* Windowed = 1 */
 		SDL_ShowCursor(1);
 	}
 	else {
@@ -317,13 +308,16 @@ void createSDLWindow() {
 
 	/* set aspect ratio and FOV */
 	patchJump((void*)ADDR_FUNC_AspectRatio, setAspectRatio);
-	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor); //Sets up FOV in Menu and Level
+	patchJump((void*)ADDR_FUNC_ScreenAngleFactor, getScreenAngleFactor);
+}
+
+SDL_Window* getWindowHandle() {
+	return window;
 }
 
 void writeConfigValues() {
 	*antialiasing = graphics_settings.antialiasing;
-	if (graphics_settings.hqshadows)
-	{
+	if (graphics_settings.hqshadows) {
 		*hq_shadows = graphics_settings.hqshadows;
 		patchByte((void*)(0x004A19E5 + 2), 0x04); /* very high shadow quality */
 		patchByte((void*)(0x004A19EA + 2), 0x04);
@@ -336,8 +330,7 @@ void writeConfigValues() {
 
 	if (distance > 100)
 		distance = 100;
-	else if (distance < 2)
-	{
+	else if (distance < 2) {
 		distance = 1;
 		distance2 = 0;
 	}
@@ -361,8 +354,7 @@ float getaspectratio() {
 }
 
 /* called from patchScripts */
-void getconfig(struct scriptsettings* scriptsettingsOut)
-{
+void getScriptSettings(struct scriptsettings* scriptsettingsOut) {
 	if (scriptsettingsOut) {
 		scriptsettingsOut->airdrift = airdrift;
 		scriptsettingsOut->suninnetgame = suninnetgame;
@@ -380,13 +372,11 @@ int getIniBool(const char* section, const char* key, int def, char* file) {
 	}
 }
 
-int Rnd_fixed(int n)
-{
+int Rnd_fixed(int n) {
 	return (rand() % n);
 }
 
 uint32_t patchButtonLookup(char* p_button) {
-
 	uint8_t value = *p_button;
 	uint8_t original_value = *p_button;
 	uint8_t base = *(p_button - 0x30);
@@ -499,9 +489,8 @@ uint32_t patchMetaButtonMap() {
 		return unkButtonMap_Native(0xEE6CDAC5); /* meta_button_map_gamecube */
 }
 
-void patch_button_font(uint8_t sel)
-{
-	/* 1 = PC (default), 3 = Xbox. Both have the same text: Xbox.buttons_font*/
+void patch_button_font(uint8_t sel) {
+	/* 1 = PC (default), 3 = Xbox. Both have the same text: Xbox.buttons_font */
 
 	if (sel == 2)
 		patchDWord((void*)0x00648B03, 0x00327350); // Ps2..buttons_font
@@ -532,16 +521,7 @@ void loadInputSettings(struct inputsettings* settingsOut) {
 	}
 }
 
-
-char getConfigFilePath() {
-
-
-
-}
-
-/* Keyboard binds */
-void loadKeyBinds(struct keybinds* bindsOut)
-{
+void getConfigFilePath(char mConfigFile[MAX_PATH]) {
 	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
 
 	// find last slash
@@ -549,9 +529,13 @@ void loadKeyBinds(struct keybinds* bindsOut)
 	if (exe) {
 		*(exe + 1) = '\0';
 	}
+	sprintf(mConfigFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
+}
 
+/* Keyboard binds */
+void loadKeyBinds(struct keybinds* bindsOut){
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
+	getConfigFilePath(configFile);
 
 	if (bindsOut) {
 		//bindsOut->menu = (SDL_Scancode)GetPrivateProfileInt(KEYBIND_SECTION, "Pause", SDL_SCANCODE_RETURN, configFile);
@@ -587,19 +571,9 @@ void loadKeyBinds(struct keybinds* bindsOut)
 }
 
 /* Gamepad binds */
-void loadControllerBinds(struct controllerbinds* bindsOut)
-{
-	GetModuleFileName(NULL, (LPSTR)&executableDirectory, MAX_PATH);
-
-	// find last slash
-	char* exe = strrchr((LPSTR)executableDirectory, '\\');
-	if (exe) {
-		*(exe + 1) = '\0';
-	}
-
+void loadControllerBinds(struct controllerbinds* bindsOut) {
 	char configFile[MAX_PATH];
-	sprintf(configFile, "%s%s", executableDirectory, CONFIG_FILE_NAME);
-
+	getConfigFilePath(configFile);
 
 	if (bindsOut) {
 		bindsOut->menu = (controllerButton)GetPrivateProfileInt(CONTROLLER_SECTION, "Pause", CONTROLLER_BUTTON_START, configFile);
