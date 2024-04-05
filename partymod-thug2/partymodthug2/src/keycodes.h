@@ -7,7 +7,6 @@
 
 // Define constants for OIS keycodes
 const uint8_t OIS_KC_UNASSIGNED = 0;
-
 const uint8_t OIS_KC_A = 0x1E;
 const uint8_t OIS_KC_B = 0x30;
 const uint8_t OIS_KC_C = 0x2E;
@@ -34,7 +33,6 @@ const uint8_t OIS_KC_W = 0x11;
 const uint8_t OIS_KC_X = 0x2D;
 const uint8_t OIS_KC_Y = 0x15;
 const uint8_t OIS_KC_Z = 0x2C;
-
 const uint8_t OIS_KC_1 = 0x02;
 const uint8_t OIS_KC_2 = 0x03;
 const uint8_t OIS_KC_3 = 0x04;
@@ -45,19 +43,15 @@ const uint8_t OIS_KC_7 = 0x08;
 const uint8_t OIS_KC_8 = 0x09;
 const uint8_t OIS_KC_9 = 0x0A;
 const uint8_t OIS_KC_0 = 0x0B;
-
 const uint8_t OIS_KC_ESC = 0x01;
-
 const uint8_t OIS_KC_MINUS = 0x0C;
 const uint8_t OIS_KC_EQUALS = 0x0D;
 const uint8_t OIS_KC_BACK = 0x0E;
 const uint8_t OIS_KC_TAB = 0x0F;
-
 const uint8_t OIS_KC_LBRACKET = 0x1A;
 const uint8_t OIS_KC_RBRACKET = 0x1B;
 const uint8_t OIS_KC_RETURN = 0x1C;
 const uint8_t OIS_KC_LCONTROL = 0x1D;
-
 const uint8_t OIS_KC_SEMICOLON = 0x27;
 const uint8_t OIS_KC_APOSTROPHE = 0x28;
 const uint8_t OIS_KC_GRAVE = 0x29;
@@ -71,7 +65,6 @@ const uint8_t OIS_KC_LMENU = 0x38;
 const uint8_t OIS_KC_SPACE = 0x39;
 const uint8_t OIS_KC_CAPITAL = 0x3A;
 const uint8_t OIS_KC_SCROLL = 0x46;
-
 const uint8_t OIS_KC_NUMLOCK = 0x45;
 const uint8_t OIS_KC_ADD = 0x4E;
 const uint8_t OIS_KC_SUBTRACT = 0x4A;
@@ -87,15 +80,12 @@ const uint8_t OIS_KC_NUMPAD6 = 0x4D;
 const uint8_t OIS_KC_NUMPAD7 = 0x47;
 const uint8_t OIS_KC_NUMPAD8 = 0x48;
 const uint8_t OIS_KC_NUMPAD9 = 0x49;
-
 const uint8_t OIS_KC_RCONTROL = 0x9D;
 const uint8_t OIS_KC_END = 0xCF;
 const uint8_t OIS_KC_PGUP = 0xC9;
 const uint8_t OIS_KC_PGDOWN = 0xD1;
 const uint8_t OIS_KC_INSERT = 0xD2;
 const uint8_t OIS_KC_DELETE = 0xD3;
-
-
 
 /*
 TODO

@@ -78,14 +78,12 @@ void patchThisToCdecl(void *addr, void *func) {
 
     VirtualProtect(addr, 7, oldProtect, &oldProtect);
 }
+
 void callFunc(void *addr) {
     // calls function with the assumption of it returning and accepting void
     //void (*fp)() = addr;
     //fp();
 }
-
-
-
 
 void patchJump(void* addr, void* func) {
     DWORD oldProtect;
@@ -94,16 +92,4 @@ void patchJump(void* addr, void* func) {
     *(uint8_t*)addr = JUMP;
     *(uint32_t*)((uint8_t*)addr + 1) = (uint32_t)func - (uint32_t)addr - 5;
     VirtualProtect(addr, 5, oldProtect, &oldProtect);
-}
-
-void patchKeycode(void* addr, uint8_t val)
-{
-    DWORD oldProtect;
-
-    VirtualProtect(addr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
-    *(uint8_t*)addr = val;
-    *((uint8_t*)addr + 1) = 0x00;
-    *((uint8_t*)addr + 2) = 0x00;
-    *((uint8_t*)addr + 3) = 0x00;
-    VirtualProtect(addr, 4, oldProtect, &oldProtect);
 }

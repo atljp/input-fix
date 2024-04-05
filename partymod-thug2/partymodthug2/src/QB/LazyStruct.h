@@ -58,7 +58,7 @@ namespace Script
 		void AddFloat(uint32_t nameChecksum, float float_val);
 		
 		void SetStringItem(uint32_t qbKey, char* value);
-		void SetStructItem(uint32_t qbKey, LazyStruct* value); // Sets item that already exists!
+		void AddStructure(uint32_t qbKey, LazyStruct* value); // Sets item that already exists!
 		void SetArrayItem(uint32_t qbKey, void* value);
 		void RedefineArrayItem(uint32_t qbKey, void* value); // Redefine an existing array item
 

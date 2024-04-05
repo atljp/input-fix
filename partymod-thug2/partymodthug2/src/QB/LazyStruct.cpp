@@ -7,35 +7,27 @@ namespace Script {
 
 	// --------------------------------------------
 
+	typedef void(__thiscall* StructInitializeCall)(LazyStruct* struc);
+	StructInitializeCall StructInitialize = (StructInitializeCall)(0x00476410); //Thug2 address
+
 	void LazyStruct::Initialize()
 	{
 		first = 0;
 		unk0 = 0;
 		unk2 = 0;
 		unk3 = 0;
+		StructInitialize(this);
 	}
 
 	// --------------------------------------------
 
-	/*
-	// Alternative with __thiscall
-	void  LazyStruct::StructClear()
-	{
-		typedef void __thiscall StructClearCall(LazyStruct* struc);
-		StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 address
-
-		StructClear(this);
-	}
-	*/
-
-	typedef void __fastcall StructClearCall(LazyStruct* struc);
-	StructClearCall* StructClear = (StructClearCall*)(0x00477130); //Thug2 address
+	typedef void (__thiscall* Clear_NativeCall)(LazyStruct* struc);
+	Clear_NativeCall Clear_Native = (Clear_NativeCall)(0x00477090); //Thug2 address - old: 0x00477130
 
 	void LazyStruct::Clear()
 	{
-		StructClear(this);
+		Clear_Native(this);
 	}
-
 
 	//---------------------------------------
 	// Create a struct!
@@ -170,12 +162,12 @@ namespace Script {
 		AddString(this, 0, qbKey, value);
 	}
 
-	typedef void __fastcall AddStructCall(LazyStruct* struc, int edx, uint32_t qbKey, LazyStruct* value);
-	AddStructCall* AddStruct = (AddStructCall*)(0x00478670); //Thug2 address
+	typedef void (__thiscall* AddStructure_NativeCall)(LazyStruct* struc, uint32_t qbKey, LazyStruct* value);
+	AddStructure_NativeCall AddStructure_Native = (AddStructure_NativeCall)(0x00478670); //Thug2 address
 
-	void LazyStruct::SetStructItem(uint32_t qbKey, LazyStruct* value)
+	void LazyStruct::AddStructure(uint32_t qbKey, LazyStruct* value)
 	{
-		AddStruct(this, 0, qbKey, value);
+		AddStructure_Native(this, qbKey, value);
 	}
 
 	typedef void __fastcall AddArrayCall(LazyStruct* struc, int edx, uint32_t qbKey, void* value);

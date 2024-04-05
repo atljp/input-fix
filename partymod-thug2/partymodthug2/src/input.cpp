@@ -454,7 +454,7 @@ void taunt(uint8_t tauntkey) {
 		default:
 			break;
 		}
-		RunScript(0x2C43B5BA, checkParams, nullptr); // Script: SendTauntMessage
+		RunScript(0x2C43B5BA, checkParams, nullptr, nullptr); // Script: SendTauntMessage
 		Script::LazyStruct::s_free(checkParams);
 	}
 }
@@ -1207,7 +1207,7 @@ void __cdecl set_actuators(int port, uint16_t high, uint16_t low) {
 	}
 }
 
-uint8_t convert_SDL_to_OIS_keycode(uint8_t sdlKeyCode) {
+uint32_t convert_SDL_to_OIS_keycode(uint8_t sdlKeyCode) {
 	// Lookup the SDL keycode in the map
 	auto it = SDL_to_OIS_map.find(sdlKeyCode);
 	if (it != SDL_to_OIS_map.end()) {
@@ -1216,7 +1216,7 @@ uint8_t convert_SDL_to_OIS_keycode(uint8_t sdlKeyCode) {
 	}
 	else {
 		// If no mapping found, return an unspecified keycode
-		return OIS_KC_UNASSIGNED;
+		return (uint32_t)OIS_KC_UNASSIGNED;
 	}
 }
 
@@ -1269,15 +1269,15 @@ void __stdcall initManager() {
 	// Add missing key info: Since we don't use the launcher, no registry values for our keybinds are set.
 	// The game normally loads keybinds found in the registry and stores them at these addresses (starting at 0x007D6794).
 	// This simulates the launcher storing its defined keybinds in memory so that they can be displayed in game (e.g., Edit Tricks menu "<- + KP4" or Tantrum Meter "Press KP8 to freak out").
-	patchKeycode((void*)0x007D6790, convert_SDL_to_OIS_keycode(keybinds.ollie));
-	patchKeycode((void*)0x007D6794, convert_SDL_to_OIS_keycode(keybinds.grab));
-	patchKeycode((void*)0x007D6798, convert_SDL_to_OIS_keycode(keybinds.kick));
-	patchKeycode((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind));
-	patchKeycode((void*)0x007D67B0, convert_SDL_to_OIS_keycode(keybinds.leftSpin));
-	patchKeycode((void*)0x007D67B4, convert_SDL_to_OIS_keycode(keybinds.rightSpin));
-	patchKeycode((void*)0x007D67A8, convert_SDL_to_OIS_keycode(keybinds.caveman));
-	patchKeycode((void*)0x007D67AC, convert_SDL_to_OIS_keycode(keybinds.caveman2));
-	patchKeycode((void*)0x007D67B8, convert_SDL_to_OIS_keycode(keybinds.focus));
+	patchDWord((void*)0x007D6790, convert_SDL_to_OIS_keycode(keybinds.ollie));
+	patchDWord((void*)0x007D6794, convert_SDL_to_OIS_keycode(keybinds.grab));
+	patchDWord((void*)0x007D6798, convert_SDL_to_OIS_keycode(keybinds.kick));
+	patchDWord((void*)0x007D679C, convert_SDL_to_OIS_keycode(keybinds.grind));
+	patchDWord((void*)0x007D67B0, convert_SDL_to_OIS_keycode(keybinds.leftSpin));
+	patchDWord((void*)0x007D67B4, convert_SDL_to_OIS_keycode(keybinds.rightSpin));
+	patchDWord((void*)0x007D67A8, convert_SDL_to_OIS_keycode(keybinds.caveman));
+	patchDWord((void*)0x007D67AC, convert_SDL_to_OIS_keycode(keybinds.caveman2));
+	patchDWord((void*)0x007D67B8, convert_SDL_to_OIS_keycode(keybinds.focus));
 
 	mWindow = getWindowHandle();
 }
@@ -1348,6 +1348,6 @@ void CheckChatHotkey() {
 
 	if (TextInputInNetGame) {
 		// enter_kb_chat
-		RunScript(0x3B4548B8, nullptr, nullptr);
+		RunScript(0x3B4548B8, nullptr, nullptr, nullptr);
 	}
 }

@@ -274,23 +274,58 @@ bool ScriptCreateScreenElementWrapper(Script::LazyStruct* pParams, DummyScript* 
 	return CreateScreenElement_Native(pParams, pScript);
 }
 
-uint32_t somegetter() {
-
-
-
-}
+typedef bool ExecuteCFuncPointer_NativeCall(Script::LazyStruct* pParams, DummyScript* pScript);
+ExecuteCFuncPointer_NativeCall* ExecuteCFuncPointer_Native = (ExecuteCFuncPointer_NativeCall*)(0x0044BD30);
 
 bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript* pScript) {
 
 	DummyUnkElem* unkElem = (DummyUnkElem*)*(uint32_t*)(0x007CE478);
 	uint32_t p_checksum = 0;
+	bool done = FALSE;
 
 	if (unkElem->level == 0xE92ECAFE) { /* level: load_mainmenu */
 
 		if (pScript->mScriptNameChecksum == 0xE2873769) { /* script: create_cas_modifier_menu */
 
-			pParams->AddChecksum(0, 0x36150445);
-			RunScript(0x36150445, pScript->GetParams, nullptr); /* showboardmyan */
+			Script::LazyStruct* cas_menu_struct = Script::LazyStruct::s_create();
+			cas_menu_struct->AddChecksum(0, 0xB94B715A); /* add_scaling */
+			if (ExecuteCFuncPointer_Native(cas_menu_struct, pScript))
+			{
+				if (!done) {
+					done = TRUE;
+					SetScreenElementProps_Native(pParams, pScript);
+					RunScript(0x36150445, pScript->GetParams, nullptr, nullptr); /* showboardmyan */
+					cas_menu_struct->Clear();
+					printf("Did it\n");
+
+					Script::LazyStruct* a = Script::LazyStruct::s_create();
+					Script::LazyStruct* b = Script::LazyStruct::s_create();
+
+
+					cas_menu_struct->AddChecksum(0x15E31D81, 0x40C698AF); /* mod_vmenu, id */
+					a->AddChecksum(0, 0x7EE0FD2A); /* pad_back */
+					a->AddChecksum(0, 0x36150445); /* showboardmyan */
+					b->AddChecksum(0, 0x2BECBE33); /* turn_off */
+					a->AddStructure(0x7031F10C, b); /* params */
+					//new lazyarray
+
+
+				}
+
+
+
+
+				/* general cas scaling */
+				printf("Done\n");
+			}
+			else 
+			{
+				/* wheel color menu */
+				printf("Not Done\n");
+			}
+			
+
+			
 			printf("script: create_cas_modifier_menu!\n");
 
 		} else if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
