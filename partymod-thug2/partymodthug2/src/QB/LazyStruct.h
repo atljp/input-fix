@@ -8,6 +8,7 @@
 
 #pragma once
 #include <stdint.h>
+#include "LazyArray.h"
 
 #define QBTYPE_INT				1
 #define QBTYPE_FLOAT			2
@@ -59,7 +60,7 @@ namespace Script
 		
 		void SetStringItem(uint32_t qbKey, char* value);
 		void AddStructure(uint32_t qbKey, LazyStruct* value); // Sets item that already exists!
-		void SetArrayItem(uint32_t qbKey, void* value);
+		void AddArray(uint32_t nameChecksum, const Script::LazyArray* p_array);
 		void RedefineArrayItem(uint32_t qbKey, void* value); // Redefine an existing array item
 
 		int GetInteger(uint32_t qbKey);

@@ -1,6 +1,7 @@
 
 #define KEYBIND_SECTION "Keybinds"
 #define CONTROLLER_SECTION "Gamepad"
+#define ESYMBOLTYPE_INTEGER 0xA
 
 #define ADDR_LanguageFlag					0x007CEFA0
 

@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
-
 #include "patch.h"
 #include "global.h"
 #include "input.h"

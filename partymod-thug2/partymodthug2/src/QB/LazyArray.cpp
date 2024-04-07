@@ -17,16 +17,15 @@ namespace Script
     
     LazyArray* LazyArray::s_create()
     {
-        LazyArray* new_array;
-        
-            
-        if (!new_array)
+        LazyArray* result = (LazyArray*)qbArrayMalloc(sizeof(LazyArray), 1);
+          
+        if (!result)
         {
             return nullptr;
         }
-        
-        new_array -> Initialize();
-        return new_array;
+       
+        result->Initialize();
+        return result;
     }
     
     // ----------------------------
@@ -47,83 +46,40 @@ namespace Script
 	// Initialize the array.
     // ----------------------------
     
+    typedef void(__thiscall* ArrayInitializeCall)(LazyArray* arr);
+    ArrayInitializeCall ArrayInitialize = (ArrayInitializeCall)(0x0046CAA0);
+
 	void LazyArray::Initialize()
 	{ 
         type = 0;
         m_union = 0;
         length = 0;
         byte1 = 0;
+
+        ArrayInitialize(this);
 	}
-    
-    // ----------------------------
-    // Set string item.
-    // ----------------------------
-    
-    void LazyArray::SetString(uint32_t index, char* value)
-    {
-        if (length == 1)
-            mp_string = value;
-        else
-            mpp_strings[index] = value;
-    }
-    
-    // ----------------------------
-    // Set checksum item.
-    // ----------------------------
-    
-    void LazyArray::SetChecksum(uint32_t index, uint32_t checksum)
-    {
-        if (length == 1)
-            m_checksum = checksum;
-        else
-            mp_checksums[index] = checksum;
-    }
-    
-    // ----------------------------
-    // Set structure item.
-    // ----------------------------
-    
-    void LazyArray::SetStructure(uint32_t index, LazyStruct* value)
-    {
-        if (length == 1)
-            mp_structure = value;
-        else
-            mpp_structures[index] = value;
-    }
-    
-    // ----------------------------
-    // Set array item.
-    // ----------------------------
-    
-    void LazyArray::SetArray(uint32_t index, LazyArray* value)
-    {
-        if (length == 1)
-            mp_array = value;
-        else
-            mpp_arrays[index] = value;
-    }
-    
-    // ----------------------------
-    // Set integer item.
-    // ----------------------------
-    
-    void LazyArray::SetInteger(uint32_t index, int value)
-    {
-        if (length == 1)
-            m_integer = value;
-        else
-            mp_integers[index] = value;
-    }
-    
+
     // ----------------------------
     // Set array size and type.
     // ----------------------------
     
-    typedef void (__thiscall* SSAT_NativeCall)(LazyArray* arr, int new_size, uint8_t array_type);
-	SSAT_NativeCall SSAT_Native = (SSAT_NativeCall)(0x0040A1C0);
+    typedef void (__thiscall* SetSizeAndType_NativeCall)(LazyArray* arr, int size, uint8_t type);
+    SetSizeAndType_NativeCall SetSizeAndType_Native = (SetSizeAndType_NativeCall)(0x0046CC50);
     
-    void LazyArray::SetSizeAndType(int new_size, uint8_t array_type)
+    void LazyArray::SetSizeAndType(int size, uint8_t type)
     {
-        SSAT_Native(this, new_size, array_type);
+        SetSizeAndType_Native(this, size, type);
     }
+
+    // ----------------------------
+    // Set integer
+    // ----------------------------
+
+    typedef void(__thiscall* SetInteger_NativeCall)(LazyArray* arr, uint32_t index, int int_val);
+    SetInteger_NativeCall SetInteger_Native = (SetInteger_NativeCall)(0x0046CB10);
+
+    void LazyArray::SetInteger(uint32_t index, int int_val)
+    {
+        SetInteger_Native(this, index, int_val);
+    }  
 }

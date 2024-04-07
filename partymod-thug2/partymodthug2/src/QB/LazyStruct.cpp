@@ -3,6 +3,7 @@
 
 
 
+
 namespace Script {
 
 	// --------------------------------------------
@@ -44,7 +45,6 @@ namespace Script {
 		}
 
 		result->Initialize();
-
 		return result;
 	}
 
@@ -170,14 +170,6 @@ namespace Script {
 		AddStructure_Native(this, qbKey, value);
 	}
 
-	typedef void __fastcall AddArrayCall(LazyStruct* struc, int edx, uint32_t qbKey, void* value);
-	AddArrayCall* AddArray = (AddArrayCall*)(0x00478B00); //Thug2 address
-
-	void LazyStruct::SetArrayItem(uint32_t qbKey, void* value)
-	{
-		AddArray(this, 0, qbKey, value);
-	}
-
 	void LazyStruct::RedefineArrayItem(uint32_t qbKey, void* value)
 	{
 		LazyStructItem* itm = GetItem(qbKey);
@@ -295,6 +287,19 @@ namespace Script {
 	{
 		AddArrayPointer_Native(this, nameChecksum, p_array);
 	}
+
+	//---------------------------------------
+	// Creates a new array & copies in the contents of the passed array.
+	//---------------------------------------
+
+	typedef void (__thiscall* AddArray_NativeCall)(LazyStruct* struc, uint32_t nameChecksum, const Script::LazyArray* p_array);
+	AddArray_NativeCall AddArray_Native = (AddArray_NativeCall)(0x00478B00); //Thug2 address
+
+	void LazyStruct::AddArray(uint32_t nameChecksum, const Script::LazyArray* p_array)
+	{
+		AddArray_Native(this, nameChecksum, p_array);
+	}
+
 
 	//---------------------------------------
 	// Get array item

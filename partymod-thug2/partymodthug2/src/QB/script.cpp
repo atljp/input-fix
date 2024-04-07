@@ -1,6 +1,7 @@
 #include "script.h"
 #include "config.h"
 #include "scriptcontent.h"
+#include "LazyArray.h"
 
 struct scriptsettings mScriptsettings;
 uint32_t sCreateScriptSymbol = 0x0046FE40; /* called in asm wrapper */
@@ -308,8 +309,18 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 					b->AddChecksum(0, 0x2BECBE33); /* turn_off */
 					a->AddStructure(0x7031F10C, b); /* params */
 					//new lazyarray
+					Script::LazyArray* testarray = Script::LazyArray::s_create();
+					testarray->SetSizeAndType(1, ESYMBOLTYPE_INTEGER);
+					testarray->SetInteger(0, (int)&a);
+					cas_menu_struct->AddArray(0x475BF03C, testarray); /* event_handlers */
+					SetScreenElementProps_Native(cas_menu_struct, pScript);
+
+					if (b) {
 
 
+
+					}
+					
 				}
 
 

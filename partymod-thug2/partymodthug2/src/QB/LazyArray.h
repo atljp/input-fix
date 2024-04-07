@@ -68,12 +68,9 @@ namespace Script
 		public:
 			void Initialize();
             //~ void Clear();
-            void SetChecksum(uint32_t index, uint32_t checksum);
-            void SetString(uint32_t index, char* value);
-            void SetInteger(uint32_t index, int value);
-            void SetArray(uint32_t index, LazyArray* value);
-            void SetStructure(uint32_t index, LazyStruct* value);
-            void SetSizeAndType(int new_size, uint8_t array_type);
+            void SetSizeAndType(int size, uint8_t type);
+            void SetInteger(uint32_t index, int int_val);
+            
 	};
     
     //~ void CopyArray(LazyArray* dst, LazyArray* src, int allowPointers);
