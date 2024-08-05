@@ -218,8 +218,27 @@ void patchWindow() {
 
 	/* don't load launcher settings from registry, use our own INI values instead */
 	patchCall((void*)0x005F4591, writeConfigValues);
+
+	/* patch screen flash (e.g., happens during Franklin Grind) */
+	//patchNop((void*)0x004B91E7, 6);
+	//patchCall((void*)0x004B91E7, reorderFlashVertices);
 }
 
+void reorderFlashVertices(uint32_t* d3dDevice, void* unused, void* alsodevice, uint32_t prim, uint32_t count, struct flashVertex* vertices, uint32_t stride) {
+
+	/* vertices are passed into the render function in the wrong order when drawing screen flashes; reorder them before passing to draw */
+
+	typedef void (__fastcall* drawPrimitiveUP_NativeCall)(void*, void*, void*, uint32_t, uint32_t, struct flashVertex*, uint32_t);
+	drawPrimitiveUP_NativeCall drawPrimitiveUP_Native = (drawPrimitiveUP_NativeCall)(d3dDevice[72]);
+
+	struct flashVertex tmp;
+	tmp = vertices[0];
+	vertices[0] = vertices[1];
+	vertices[1] = vertices[2];
+	vertices[2] = tmp;
+
+	drawPrimitiveUP_Native(d3dDevice, unused, alsodevice, prim, count, vertices, stride);
+}
 
 void enforceMaxResolution() {
 	defWidth = GetSystemMetrics(SM_CXSCREEN);	/* The width of the screen of the primary display monitor, in pixels.  */

@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 // Various memory allocation calls used by classes in the game. Since the game's memory management is different than ours, any game class created
 // that uses dynamic memory allocation should be using these calls so that the game cleans them up properly.
 

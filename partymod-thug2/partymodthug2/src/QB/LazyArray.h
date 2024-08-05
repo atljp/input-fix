@@ -67,7 +67,7 @@ namespace Script
         
 		public:
 			void Initialize();
-            //~ void Clear();
+            void Clear();
             void SetSizeAndType(int size, uint8_t type);
             void SetInteger(uint32_t index, int int_val);
             

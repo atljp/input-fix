@@ -2,6 +2,7 @@
 #include "config.h"
 #include "scriptcontent.h"
 #include "LazyArray.h"
+#include "malloc.h"
 
 struct scriptsettings mScriptsettings;
 uint32_t sCreateScriptSymbol = 0x0046FE40; /* called in asm wrapper */
@@ -294,14 +295,12 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 			{
 				if (!done) {
 					done = TRUE;
-					SetScreenElementProps_Native(pParams, pScript);
+					bool x = SetScreenElementProps_Native(pParams, pScript);
 					RunScript(0x36150445, pScript->GetParams, nullptr, nullptr); /* showboardmyan */
 					cas_menu_struct->Clear();
-					printf("Did it\n");
 
 					Script::LazyStruct* a = Script::LazyStruct::s_create();
 					Script::LazyStruct* b = Script::LazyStruct::s_create();
-
 
 					cas_menu_struct->AddChecksum(0x15E31D81, 0x40C698AF); /* mod_vmenu, id */
 					a->AddChecksum(0, 0x7EE0FD2A); /* pad_back */
@@ -311,45 +310,40 @@ bool ScriptSetScreenElementPropsWrapper(Script::LazyStruct* pParams, DummyScript
 					//new lazyarray
 					Script::LazyArray* testarray = Script::LazyArray::s_create();
 					testarray->SetSizeAndType(1, ESYMBOLTYPE_INTEGER);
-					testarray->SetInteger(0, (int)&a);
+					testarray->SetInteger(0, (int)a);
 					cas_menu_struct->AddArray(0x475BF03C, testarray); /* event_handlers */
 					SetScreenElementProps_Native(cas_menu_struct, pScript);
 
+
+					/* clean up allocated space */
 					if (b) {
-
-
-
+						b->Clear();
+						FreeQBStruct(b);
 					}
-					
+					if (a) {
+						a->Clear();
+						FreeQBStruct(a);
+					}
+					if (testarray) {
+						testarray->Clear();
+						FreeQBArray(testarray);
+					}
+					if (cas_menu_struct) {
+						cas_menu_struct->Clear();
+						FreeQBStruct(cas_menu_struct);
+						return x;
+					}
 				}
-
-
-
-
-				/* general cas scaling */
-				printf("Done\n");
 			}
-			else 
-			{
-				/* wheel color menu */
-				printf("Not Done\n");
-			}
-			
-
-			
-			printf("script: create_cas_modifier_menu!\n");
-
 		} else if (pScript->mScriptNameChecksum == 0x1B95F333) { /* script: create_scale_options_menu */
 
 			pParams->GetChecksum(0x40C698AF, &p_checksum, false); /* id */
 
 			if (p_checksum == 0x5E430716) { /* scaling_vmenu */
-
 				removeScript(0xD2BE4CAF); /* skateshop_scaling_options */
 				__asm {push ecx}
 				loadXYZScales(); /* data must not contain newlines but must end with one (token 0x01). returns pointer to last newline token */
 				__asm {pop ecx}
-				printf("checksum scaling_vmenu!\n");
 			}		
 		}
 	}

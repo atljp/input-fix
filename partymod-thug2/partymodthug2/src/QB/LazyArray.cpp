@@ -60,6 +60,17 @@ namespace Script
 	}
 
     // ----------------------------
+    // Clear the array.
+    // ----------------------------
+
+    typedef void(__thiscall* Clear_NativeCall)(LazyArray* arr);
+    Clear_NativeCall Clear_Native = (Clear_NativeCall)(0x0046CAB0);
+
+    void LazyArray::Clear() {
+        Clear_Native(this);
+    }
+
+    // ----------------------------
     // Set array size and type.
     // ----------------------------
     

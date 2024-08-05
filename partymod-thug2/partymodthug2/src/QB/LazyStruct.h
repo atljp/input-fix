@@ -43,6 +43,7 @@ namespace Script
 	public:
 
 		void Initialize();
+		void Free();
 		void Clear();
 
 		static LazyStruct* s_create();

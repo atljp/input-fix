@@ -129,6 +129,12 @@ struct scriptsettings {
 	uint8_t boardscuffs;
 };
 
+struct flashVertex {
+	float x, y, z, w;
+	uint32_t color;
+	float u, v;
+};
+
 void enforceMaxResolution();
 void createSDLWindow();
 void writeConfigValues();
@@ -136,6 +142,7 @@ void patchWindow();
 SDL_Window* getWindowHandle();
 void initPatch();
 void patchStaticValues();
+//void reorderFlashVertices(uint32_t* d3dDevice, void* unused, void* alsodevice, uint32_t prim, uint32_t count, struct flashVertex* vertices, uint32_t stride);
 void loadInputSettings(struct inputsettings* settingsOut);
 void loadControllerBinds(struct controllerbinds* bindsOut);
 void loadKeyBinds(struct keybinds* bindsOut);

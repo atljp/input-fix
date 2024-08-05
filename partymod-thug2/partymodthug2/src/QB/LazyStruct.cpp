@@ -22,12 +22,24 @@ namespace Script {
 
 	// --------------------------------------------
 
-	typedef void (__thiscall* Clear_NativeCall)(LazyStruct* struc);
-	Clear_NativeCall Clear_Native = (Clear_NativeCall)(0x00477090); //Thug2 address - old: 0x00477130
+	typedef void(__thiscall* Clear_NativeCall)(LazyStruct* struc);
+	Clear_NativeCall Clear_Native = (Clear_NativeCall)(0x00477130);
 
 	void LazyStruct::Clear()
 	{
 		Clear_Native(this);
+	}
+
+	// --------------------------------------------
+
+	
+
+	typedef void (__thiscall* Free_NativeCall)(LazyStruct* struc);
+	Free_NativeCall Free_Native = (Free_NativeCall)(0x00477090); //Thug2 address - old: 0x00477130
+
+	void LazyStruct::Free()
+	{
+		Free_Native(this);
 	}
 
 	//---------------------------------------
@@ -54,7 +66,7 @@ namespace Script {
 
 	void LazyStruct::s_free(LazyStruct* to_free)
 	{
-		to_free->Clear();
+		to_free->Free();
 		FreeQBStruct(to_free);
 	}
 
@@ -182,7 +194,7 @@ namespace Script {
 	// Get integer item
 	//---------------------------------------
 
-	int LazyStruct::GetInteger(uint32_t qbKey)
+	int LazyStruct::GetInteger(uint32_t qbKey) // 0x004790C0
 	{
 		LazyStructItem* item = GetItem(qbKey);
 		if (!item)
